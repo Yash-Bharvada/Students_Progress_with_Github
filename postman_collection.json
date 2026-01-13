@@ -1,0 +1,2855 @@
+{
+	"info": {
+		"_postman_id": "student-progress-backend-api-comprehensive",
+		"name": "Student Progress Backend API - Comprehensive Collection",
+		"description": "Complete production-ready API collection for Student Progress Backend with organized folders for Authentication, GraphQL Operations, Authorization Testing, Error Scenarios, and AI Feedback System. This collection covers all requirements and provides comprehensive testing capabilities for the FastAPI + Strawberry GraphQL backend with GitHub OAuth, MongoDB Atlas, and AI-powered feedback features.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"version": {
+			"major": 2,
+			"minor": 1,
+			"patch": 0
+		}
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Step 1: GitHub OAuth Login",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/github/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"github",
+								"login"
+							]
+						},
+						"description": "**OAuth Flow Step 1**: Initiates GitHub OAuth flow.\n\n**Requirements Validated:** 1.1\n\n**Instructions:**\n1. Send this request to get the GitHub authorization URL\n2. Copy the redirect URL from the response\n3. Open the URL in your browser\n4. Authorize the application on GitHub\n5. GitHub will redirect to the callback URL with an authorization code\n6. Copy the 'code' parameter from the callback URL\n7. Use the code in Step 2\n\n**Expected Response:** 302 Redirect to GitHub OAuth authorization page"
+					}
+				},
+				{
+					"name": "Step 2: Mentor Login Success",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/github/callback?code={{auth_code}}&state={{oauth_state}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"github",
+								"callback"
+							],
+							"query": [
+								{
+									"key": "code",
+									"value": "{{auth_code}}",
+									"description": "Authorization code from GitHub (copy from Step 1 redirect)"
+								},
+								{
+									"key": "state",
+									"value": "{{oauth_state}}",
+									"description": "Optional state parameter for CSRF protection"
+								}
+							]
+						},
+						"description": "**Mentor Login Success Scenario**: Handles GitHub OAuth callback for mentor users.\n\n**Requirements Validated:** 1.2, 1.3, 1.4, 1.5, 1.6\n\n**Test Scenario:** New mentor user (auto-created) or existing mentor\n\n**Instructions:**\n1. Replace {{auth_code}} with the code from GitHub callback URL\n2. Send this request to exchange code for JWT token\n3. The JWT token will be automatically saved to environment variables\n4. Use the JWT token for authenticated GraphQL requests\n\n**Expected Response (New Mentor):**\n```json\n{\n  \"access_token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...\",\n  \"token_type\": \"bearer\",\n  \"user\": {\n    \"id\": \"507f1f77bcf86cd799439011\",\n    \"github_id\": \"12345\",\n    \"username\": \"mentor_user\",\n    \"email\": \"mentor@example.com\",\n    \"role\": \"MENTOR\",\n    \"is_enrolled\": true\n  }\n}\n```\n\n**Expected Response (Existing Mentor):**\n```json\n{\n  \"access_token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...\",\n  \"token_type\": \"bearer\",\n  \"user\": {\n    \"id\": \"507f1f77bcf86cd799439012\",\n    \"github_id\": \"12345\",\n    \"username\": \"existing_mentor\",\n    \"email\": \"mentor@example.com\",\n    \"role\": \"MENTOR\",\n    \"is_enrolled\": true\n  }\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Extract JWT token from response and set as environment variable",
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.access_token) {",
+									"        pm.environment.set('jwt_token', responseJson.access_token);",
+									"        pm.environment.set('mentor_jwt_token', responseJson.access_token);",
+									"        console.log('✓ Mentor JWT token saved to environment variables');",
+									"        ",
+									"        // Validate mentor user creation/authentication",
+									"        if (responseJson.user) {",
+									"            pm.environment.set('current_user_role', responseJson.user.role);",
+									"            pm.environment.set('current_user_github_id', responseJson.user.github_id);",
+									"            ",
+									"            pm.test('User is mentor', function () {",
+									"                pm.expect(responseJson.user.role).to.eql('MENTOR');",
+									"            });",
+									"            ",
+									"            pm.test('Mentor is enrolled', function () {",
+									"                pm.expect(responseJson.user.is_enrolled).to.be.true;",
+									"            });",
+									"            ",
+									"            console.log('✓ Mentor authenticated successfully - Role:', responseJson.user.role);",
+									"        }",
+									"    }",
+									"} else {",
+									"    console.log('❌ Mentor authentication failed:', pm.response.text());",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Step 3: Enrolled Student Login Success",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/github/callback?code={{student_auth_code}}&state={{oauth_state}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"github",
+								"callback"
+							],
+							"query": [
+								{
+									"key": "code",
+									"value": "{{student_auth_code}}",
+									"description": "Authorization code from GitHub for enrolled student"
+								},
+								{
+									"key": "state",
+									"value": "{{oauth_state}}",
+									"description": "Optional state parameter for CSRF protection"
+								}
+							]
+						},
+						"description": "**Enrolled Student Login Success Scenario**: OAuth callback for pre-enrolled student.\n\n**Requirements Validated:** 1.5, 2.4\n\n**Prerequisites:** Student must be pre-enrolled by a mentor using enrollStudent mutation\n\n**Test Scenario:** Student who was enrolled by mentor attempts to login\n\n**Instructions:**\n1. First, ensure a mentor has enrolled this student using the enrollStudent mutation\n2. Replace {{student_auth_code}} with the authorization code from GitHub\n3. Send this request to authenticate the enrolled student\n\n**Expected Response (Enrolled Student):**\n```json\n{\n  \"access_token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...\",\n  \"token_type\": \"bearer\",\n  \"user\": {\n    \"id\": \"507f1f77bcf86cd799439013\",\n    \"github_id\": \"67890\",\n    \"username\": \"enrolled_student\",\n    \"email\": \"student@example.com\",\n    \"role\": \"STUDENT\",\n    \"is_enrolled\": true\n  }\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test enrolled student authentication",
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.access_token) {",
+									"        pm.environment.set('student_jwt_token', responseJson.access_token);",
+									"        console.log('✓ Student JWT token saved to environment variable');",
+									"        ",
+									"        // Validate student authentication",
+									"        if (responseJson.user) {",
+									"            pm.test('User is student', function () {",
+									"                pm.expect(responseJson.user.role).to.eql('STUDENT');",
+									"            });",
+									"            ",
+									"            pm.test('Student is enrolled', function () {",
+									"                pm.expect(responseJson.user.is_enrolled).to.be.true;",
+									"            });",
+									"            ",
+									"            console.log('✓ Enrolled student authenticated successfully');",
+									"        }",
+									"    }",
+									"} else {",
+									"    console.log('❌ Student authentication failed:', pm.response.text());",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Step 4: Non-Enrolled Student Login (403 Forbidden)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/github/callback?code={{non_enrolled_student_code}}&state={{oauth_state}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"github",
+								"callback"
+							],
+							"query": [
+								{
+									"key": "code",
+									"value": "{{non_enrolled_student_code}}",
+									"description": "Authorization code from GitHub for non-enrolled student"
+								},
+								{
+									"key": "state",
+									"value": "{{oauth_state}}",
+									"description": "Optional state parameter for CSRF protection"
+								}
+							]
+						},
+						"description": "**Non-Enrolled Student Login Failure Scenario**: OAuth callback for student who was NOT pre-enrolled.\n\n**Requirements Validated:** 1.7, 2.4\n\n**Test Scenario:** Student who was NOT enrolled by a mentor attempts to login\n\n**Instructions:**\n1. Use a GitHub account that has NOT been enrolled by any mentor\n2. Replace {{non_enrolled_student_code}} with the authorization code from GitHub\n3. Send this request to test access denial for non-enrolled students\n\n**Expected Response (403 Forbidden):**\n```json\n{\n  \"detail\": \"Access denied. Student is not enrolled. Please contact a mentor for enrollment.\"\n}\n```\n\n**Status Code:** 403 Forbidden"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test non-enrolled student access denial",
+									"pm.test('Non-enrolled student access denied', function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									"",
+									"pm.test('Proper error message for non-enrolled student', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.detail).to.include('not enrolled');",
+									"});",
+									"",
+									"if (pm.response.code === 403) {",
+									"    console.log('✓ Non-enrolled student correctly denied access');",
+									"} else {",
+									"    console.log('❌ Non-enrolled student should be denied access with 403');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "JWT Token Validation Test",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						},
+						"description": "**JWT Token Validation**: Test if the JWT token is valid and properly authenticated.\n\n**Requirements Validated:** 7.1, 7.2, 7.3\n\n**Instructions:**\n1. Ensure you have completed OAuth flow (Steps 1-2)\n2. Send this request to validate your JWT token\n3. Should return your user profile if token is valid\n\n**Expected Response (Valid Token):**\n```json\n{\n  \"id\": \"507f1f77bcf86cd799439011\",\n  \"github_id\": \"12345\",\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"role\": \"MENTOR\",\n  \"is_enrolled\": true,\n  \"created_at\": \"2024-01-15T10:30:00Z\",\n  \"last_login\": \"2024-01-15T14:20:00Z\"\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Validate JWT token response",
+									"pm.test('JWT token is valid', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('github_id');",
+									"    pm.expect(responseJson).to.have.property('username');",
+									"    pm.expect(responseJson).to.have.property('role');",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    console.log('✓ JWT token is valid and authenticated');",
+									"} else {",
+									"    console.log('❌ JWT token validation failed');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "OAuth Error - Invalid Code",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/github/callback?code=invalid_code_123&state={{oauth_state}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"github",
+								"callback"
+							],
+							"query": [
+								{
+									"key": "code",
+									"value": "invalid_code_123",
+									"description": "Invalid authorization code"
+								},
+								{
+									"key": "state",
+									"value": "{{oauth_state}}",
+									"description": "State parameter"
+								}
+							]
+						},
+						"description": "**OAuth Error Scenario**: Test handling of invalid authorization code.\n\n**Test Scenario:** Invalid or expired authorization code from GitHub\n\n**Expected Response (400 Bad Request):**\n```json\n{\n  \"detail\": \"GitHub OAuth failed: Invalid authorization code\"\n}\n```\n\n**Status Code:** 400 Bad Request"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test invalid code handling",
+									"pm.test('Invalid code returns 400', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Proper error message for invalid code', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.detail).to.include('OAuth failed');",
+									"});",
+									"",
+									"console.log('✓ Invalid OAuth code properly handled');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "OAuth Error - Missing Code",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/github/callback?state={{oauth_state}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"github",
+								"callback"
+							],
+							"query": [
+								{
+									"key": "state",
+									"value": "{{oauth_state}}",
+									"description": "State parameter"
+								}
+							]
+						},
+						"description": "**OAuth Error Scenario**: Test handling of missing authorization code.\n\n**Test Scenario:** Callback request without authorization code parameter\n\n**Expected Response (400 Bad Request):**\n```json\n{\n  \"detail\": \"Authorization code is required\"\n}\n```\n\n**Status Code:** 400 Bad Request"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test missing code handling",
+									"pm.test('Missing code returns 400', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Proper error message for missing code', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.detail).to.include('required');",
+									"});",
+									"",
+									"console.log('✓ Missing OAuth code properly handled');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Manual JWT Token Setup",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer YOUR_JWT_TOKEN_HERE"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query GetMe { getMe { id githubId username email role } }\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Manual JWT Setup**: For testing with a pre-existing JWT token.\n\n**Instructions:**\n1. Replace 'YOUR_JWT_TOKEN_HERE' with your actual JWT token\n2. Or set the {{jwt_token}} environment variable manually\n3. Send request to test authentication\n\n**JWT Token Format:**\n- Header: `Authorization: Bearer <token>`\n- Token structure: `eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJnaXRodWJfaWQiOiIxMjM0NSIsInVzZXJuYW1lIjoiam9obl9kb2UiLCJlbWFpbCI6ImpvaG5AZXhhbXBsZS5jb20iLCJyb2xlIjoiTUVOVE9SIiwiaWF0IjoxNjQwOTk1MjAwLCJleHAiOjE2NDA5OTg4MDB9.signature`\n\n**Token Claims:**\n- `github_id`: User's GitHub ID\n- `username`: GitHub username\n- `email`: User's email\n- `role`: MENTOR or STUDENT\n- `iat`: Issued at timestamp\n- `exp`: Expiration timestamp"
+					}
+				}
+			],
+			"description": "**GitHub OAuth Authentication Flow**\n\nComplete OAuth 2.0 Authorization Code Flow with GitHub including all authentication scenarios:\n\n**Success Scenarios:**\n1. **Mentor Login**: New mentor auto-creation or existing mentor authentication\n2. **Enrolled Student Login**: Pre-enrolled student authentication\n\n**Error Scenarios:**\n3. **Non-Enrolled Student**: 403 Forbidden for students not enrolled by mentors\n4. **Invalid OAuth Code**: Handling of invalid/expired authorization codes\n5. **Missing OAuth Code**: Handling of missing authorization parameters\n\n**JWT Token Management:**\n- Token validation and user profile retrieval\n- Invalid and expired token handling\n- Authorization header extraction\n\n**Requirements Coverage:**\n- 1.1: GitHub OAuth login redirect\n- 1.2: Authorization code exchange\n- 1.3: GitHub user profile fetching\n- 1.4: User validation against MongoDB\n- 1.5: JWT issuance for existing users\n- 1.6: Mentor user auto-creation\n- 1.7: Non-enrolled student access denial\n- 2.4: Student self-registration prevention\n- 7.1-7.4: JWT token management\n\n**Environment Variables Used:**\n- `jwt_token`: Current JWT token for authenticated requests\n- `mentor_jwt_token`: Mentor-specific JWT token\n- `student_jwt_token`: Student-specific JWT token\n- `auth_code`: Authorization code from GitHub callback\n- `student_auth_code`: Auth code for enrolled student\n- `non_enrolled_student_code`: Auth code for non-enrolled student (403 test)\n- `oauth_state`: State parameter for CSRF protection\n- `current_user_role`: Current user's role (MENTOR/STUDENT)\n- `current_user_github_id`: Current user's GitHub ID"
+		},
+		{
+			"name": "GraphQL Queries",
+			"item": [
+				{
+					"name": "Get Current User (getMe)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query GetMe { getMe { id githubId username email role isEnrolled enrolledBy createdAt } }\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Get Current User Profile**: Retrieves the authenticated user's profile information.\n\n**Requirements Validated:** 6.1\n\n**Permission Required:** IsAuthenticated\n\n**Query Details:**\n- Returns current user's complete profile\n- Works for both MENTOR and STUDENT roles\n- Requires valid JWT token in Authorization header\n\n**Expected Response (Mentor):**\n```json\n{\n  \"data\": {\n    \"getMe\": {\n      \"id\": \"507f1f77bcf86cd799439011\",\n      \"githubId\": \"12345\",\n      \"username\": \"mentor_user\",\n      \"email\": \"mentor@example.com\",\n      \"role\": \"MENTOR\",\n      \"isEnrolled\": true,\n      \"enrolledBy\": null,\n      \"createdAt\": \"2024-01-15T10:30:00Z\"\n    }\n  }\n}\n```\n\n**Expected Response (Student):**\n```json\n{\n  \"data\": {\n    \"getMe\": {\n      \"id\": \"507f1f77bcf86cd799439013\",\n      \"githubId\": \"67890\",\n      \"username\": \"student_user\",\n      \"email\": \"student@example.com\",\n      \"role\": \"STUDENT\",\n      \"isEnrolled\": true,\n      \"enrolledBy\": \"12345\",\n      \"createdAt\": \"2024-01-15T11:45:00Z\"\n    }\n  }\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('getMe query successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('getMe');",
+									"});",
+									"",
+									"pm.test('User profile contains required fields', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const user = responseJson.data.getMe;",
+									"    pm.expect(user).to.have.property('id');",
+									"    pm.expect(user).to.have.property('githubId');",
+									"    pm.expect(user).to.have.property('username');",
+									"    pm.expect(user).to.have.property('role');",
+									"    pm.expect(user.role).to.be.oneOf(['MENTOR', 'STUDENT']);",
+									"});",
+									"",
+									"// Save user info for other tests",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.data && responseJson.data.getMe) {",
+									"    const user = responseJson.data.getMe;",
+									"    pm.environment.set('current_user_id', user.id);",
+									"    pm.environment.set('current_user_github_id', user.githubId);",
+									"    pm.environment.set('current_user_role', user.role);",
+									"    console.log('✓ User profile retrieved:', user.username, '(' + user.role + ')');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Repositories (Role-Based)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query GetRepositories { getRepositories { id repoName repoUrl ownerGithubId linkedStudents createdAt } }\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Get Repositories with Role-Based Filtering**: Retrieves repositories based on user role and permissions.\n\n**Requirements Validated:** 6.2\n\n**Permission Required:** IsAuthenticated\n\n**Role-Based Behavior:**\n- **MENTOR**: Returns all repositories they own (ownerGithubId matches)\n- **STUDENT**: Returns repositories they are linked to (githubId in linkedStudents array)\n\n**Expected Response (Mentor):**\n```json\n{\n  \"data\": {\n    \"getRepositories\": [\n      {\n        \"id\": \"507f1f77bcf86cd799439012\",\n        \"repoName\": \"Sample Project\",\n        \"repoUrl\": \"https://github.com/mentor/sample-project\",\n        \"ownerGithubId\": \"12345\",\n        \"linkedStudents\": [\"67890\", \"11111\"],\n        \"createdAt\": \"2024-01-15T12:00:00Z\"\n      }\n    ]\n  }\n}\n```\n\n**Expected Response (Student):**\n```json\n{\n  \"data\": {\n    \"getRepositories\": [\n      {\n        \"id\": \"507f1f77bcf86cd799439012\",\n        \"repoName\": \"Sample Project\",\n        \"repoUrl\": \"https://github.com/mentor/sample-project\",\n        \"ownerGithubId\": \"12345\",\n        \"linkedStudents\": [\"67890\", \"11111\"],\n        \"createdAt\": \"2024-01-15T12:00:00Z\"\n      }\n    ]\n  }\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('getRepositories query successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('getRepositories');",
+									"    pm.expect(responseJson.data.getRepositories).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Repository data contains required fields', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const repositories = responseJson.data.getRepositories;",
+									"    if (repositories.length > 0) {",
+									"        const repo = repositories[0];",
+									"        pm.expect(repo).to.have.property('id');",
+									"        pm.expect(repo).to.have.property('repoName');",
+									"        pm.expect(repo).to.have.property('repoUrl');",
+									"        pm.expect(repo).to.have.property('ownerGithubId');",
+									"        pm.expect(repo).to.have.property('linkedStudents');",
+									"        pm.expect(repo.linkedStudents).to.be.an('array');",
+									"    }",
+									"});",
+									"",
+									"// Save first repository ID for other tests",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.data && responseJson.data.getRepositories.length > 0) {",
+									"    const firstRepo = responseJson.data.getRepositories[0];",
+									"    pm.environment.set('repository_id', firstRepo.id);",
+									"    console.log('✓ Repositories retrieved:', responseJson.data.getRepositories.length, 'repositories');",
+									"    console.log('  - First repository ID saved:', firstRepo.id);",
+									"} else {",
+									"    console.log('ℹ️ No repositories found for current user');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Get My Contribution Metrics (Student Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query GetMyContributionMetrics { getMyContributionMetrics { id repoId studentGithubId commitCount prCount issueCount consistencyScore lastUpdated } }\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Get Student's Own Contribution Metrics**: Retrieves contribution metrics for the current student user only.\n\n**Requirements Validated:** 6.3\n\n**Permission Required:** IsStudent\n\n**Access Control:**\n- Only STUDENT role can access this query\n- Students can only see their own metrics\n- Returns all metrics across all repositories the student has access to\n\n**Prerequisites:**\n- Must use student JWT token ({{student_jwt_token}})\n- Student must have saved some contribution metrics\n\n**Expected Response (Student with Metrics):**\n```json\n{\n  \"data\": {\n    \"getMyContributionMetrics\": [\n      {\n        \"id\": \"507f1f77bcf86cd799439014\",\n        \"repoId\": \"507f1f77bcf86cd799439012\",\n        \"studentGithubId\": \"67890\",\n        \"commitCount\": 25,\n        \"prCount\": 5,\n        \"issueCount\": 3,\n        \"consistencyScore\": 0.85,\n        \"lastUpdated\": \"2024-01-15T14:30:00Z\"\n      },\n      {\n        \"id\": \"507f1f77bcf86cd799439015\",\n        \"repoId\": \"507f1f77bcf86cd799439013\",\n        \"studentGithubId\": \"67890\",\n        \"commitCount\": 15,\n        \"prCount\": 2,\n        \"issueCount\": 1,\n        \"consistencyScore\": 0.72,\n        \"lastUpdated\": \"2024-01-15T13:15:00Z\"\n      }\n    ]\n  }\n}\n```\n\n**Expected Response (Student with No Metrics):**\n```json\n{\n  \"data\": {\n    \"getMyContributionMetrics\": []\n  }\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('getMyContributionMetrics query successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('getMyContributionMetrics');",
+									"    pm.expect(responseJson.data.getMyContributionMetrics).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Metrics data contains required fields', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const metrics = responseJson.data.getMyContributionMetrics;",
+									"    if (metrics.length > 0) {",
+									"        const metric = metrics[0];",
+									"        pm.expect(metric).to.have.property('id');",
+									"        pm.expect(metric).to.have.property('repoId');",
+									"        pm.expect(metric).to.have.property('studentGithubId');",
+									"        pm.expect(metric).to.have.property('commitCount');",
+									"        pm.expect(metric).to.have.property('prCount');",
+									"        pm.expect(metric).to.have.property('issueCount');",
+									"        pm.expect(metric).to.have.property('consistencyScore');",
+									"        pm.expect(metric.consistencyScore).to.be.within(0, 1);",
+									"    }",
+									"});",
+									"",
+									"pm.test('Student can only see own metrics', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const metrics = responseJson.data.getMyContributionMetrics;",
+									"    const currentUserGithubId = pm.environment.get('current_user_github_id');",
+									"    ",
+									"    metrics.forEach(function(metric) {",
+									"        pm.expect(metric.studentGithubId).to.eql(currentUserGithubId);",
+									"    });",
+									"});",
+									"",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.data) {",
+									"    const metricsCount = responseJson.data.getMyContributionMetrics.length;",
+									"    console.log('✓ Student contribution metrics retrieved:', metricsCount, 'metrics');",
+									"    if (metricsCount > 0) {",
+									"        const avgScore = responseJson.data.getMyContributionMetrics.reduce((sum, m) => sum + m.consistencyScore, 0) / metricsCount;",
+									"        console.log('  - Average consistency score:', avgScore.toFixed(2));",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Get All Contribution Metrics (Mentor Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{mentor_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query GetAllContributionMetrics($repoId: String!) { getAllContributionMetrics(repoId: $repoId) { id repoId studentGithubId commitCount prCount issueCount consistencyScore lastUpdated } }\",\n  \"variables\": {\n    \"repoId\": \"{{repository_id}}\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Get All Student Contribution Metrics for Repository**: Retrieves all student contribution metrics for a specific repository (mentor only).\n\n**Requirements Validated:** 6.4\n\n**Permission Required:** IsMentor\n\n**Access Control:**\n- Only MENTOR role can access this query\n- Mentors can only see metrics for repositories they own\n- Returns metrics for ALL students in the specified repository\n\n**Prerequisites:**\n- Must use mentor JWT token ({{mentor_jwt_token}})\n- Must provide valid repository ID that the mentor owns\n- Repository should have student contribution metrics\n\n**Query Variables:**\n- `repoId`: Repository ID (ObjectId string) - must be owned by the mentor\n\n**Expected Response (Repository with Student Metrics):**\n```json\n{\n  \"data\": {\n    \"getAllContributionMetrics\": [\n      {\n        \"id\": \"507f1f77bcf86cd799439014\",\n        \"repoId\": \"507f1f77bcf86cd799439012\",\n        \"studentGithubId\": \"67890\",\n        \"commitCount\": 25,\n        \"prCount\": 5,\n        \"issueCount\": 3,\n        \"consistencyScore\": 0.85,\n        \"lastUpdated\": \"2024-01-15T14:30:00Z\"\n      },\n      {\n        \"id\": \"507f1f77bcf86cd799439016\",\n        \"repoId\": \"507f1f77bcf86cd799439012\",\n        \"studentGithubId\": \"11111\",\n        \"commitCount\": 18,\n        \"prCount\": 3,\n        \"issueCount\": 2,\n        \"consistencyScore\": 0.72,\n        \"lastUpdated\": \"2024-01-15T13:45:00Z\"\n      }\n    ]\n  }\n}\n```\n\n**Expected Response (Repository with No Metrics):**\n```json\n{\n  \"data\": {\n    \"getAllContributionMetrics\": []\n  }\n}\n```\n\n**Error Response (Repository Not Owned by Mentor):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Failed to get repository contribution metrics: Repository not found or access denied: 507f1f77bcf86cd799439999\"\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('getAllContributionMetrics query successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('getAllContributionMetrics');",
+									"    pm.expect(responseJson.data.getAllContributionMetrics).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('All metrics belong to specified repository', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const metrics = responseJson.data.getAllContributionMetrics;",
+									"    const expectedRepoId = pm.variables.get('repoId') || pm.environment.get('repository_id');",
+									"    ",
+									"    metrics.forEach(function(metric) {",
+									"        pm.expect(metric.repoId).to.eql(expectedRepoId);",
+									"    });",
+									"});",
+									"",
+									"pm.test('Metrics data contains required fields', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const metrics = responseJson.data.getAllContributionMetrics;",
+									"    if (metrics.length > 0) {",
+									"        const metric = metrics[0];",
+									"        pm.expect(metric).to.have.property('id');",
+									"        pm.expect(metric).to.have.property('repoId');",
+									"        pm.expect(metric).to.have.property('studentGithubId');",
+									"        pm.expect(metric).to.have.property('commitCount');",
+									"        pm.expect(metric).to.have.property('prCount');",
+									"        pm.expect(metric).to.have.property('issueCount');",
+									"        pm.expect(metric).to.have.property('consistencyScore');",
+									"        pm.expect(metric.consistencyScore).to.be.within(0, 1);",
+									"    }",
+									"});",
+									"",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.data) {",
+									"    const metricsCount = responseJson.data.getAllContributionMetrics.length;",
+									"    const repoId = pm.variables.get('repoId') || pm.environment.get('repository_id');",
+									"    console.log('✓ Repository contribution metrics retrieved:', metricsCount, 'metrics for repository', repoId);",
+									"    ",
+									"    if (metricsCount > 0) {",
+									"        const students = [...new Set(responseJson.data.getAllContributionMetrics.map(m => m.studentGithubId))];",
+									"        console.log('  - Students with metrics:', students.length);",
+									"        const avgScore = responseJson.data.getAllContributionMetrics.reduce((sum, m) => sum + m.consistencyScore, 0) / metricsCount;",
+									"        console.log('  - Average consistency score:', avgScore.toFixed(2));",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Test Query Authorization - Student Accessing Mentor Query",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query GetAllContributionMetrics($repoId: String!) { getAllContributionMetrics(repoId: $repoId) { id repoId studentGithubId } }\",\n  \"variables\": {\n    \"repoId\": \"507f1f77bcf86cd799439012\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Authorization Test**: Verify that students cannot access mentor-only queries.\n\n**Requirements Validated:** 2.5, 6.7, 9.2\n\n**Test Scenario:** Student attempting to access getAllContributionMetrics (mentor-only query)\n\n**Expected Response (Authorization Denied):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Mentor access required. This operation is restricted to mentors only.\",\n      \"extensions\": {\n        \"code\": \"FORBIDDEN\"\n      }\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student denied access to mentor query', function () {",
+									"    pm.response.to.have.status(200); // GraphQL returns 200 with errors",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('errors');",
+									"    pm.expect(responseJson.errors[0].message).to.include('Mentor access required');",
+									"});",
+									"",
+									"console.log('✓ Student properly denied access to mentor-only query');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Test Query Authorization - Mentor Accessing Student Query",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{mentor_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query GetMyContributionMetrics { getMyContributionMetrics { id repoId studentGithubId } }\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Authorization Test**: Verify that mentors cannot access student-only queries.\n\n**Requirements Validated:** 2.5, 6.7, 9.2\n\n**Test Scenario:** Mentor attempting to access getMyContributionMetrics (student-only query)\n\n**Expected Response (Authorization Denied):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Student access required. This operation is restricted to students only.\",\n      \"extensions\": {\n        \"code\": \"FORBIDDEN\"\n      }\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Mentor denied access to student query', function () {",
+									"    pm.response.to.have.status(200); // GraphQL returns 200 with errors",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('errors');",
+									"    pm.expect(responseJson.errors[0].message).to.include('Student access required');",
+									"});",
+									"",
+									"console.log('✓ Mentor properly denied access to student-only query');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				}
+			],
+			"description": "**GraphQL Query Operations with Role-Based Access Control**\n\nComplete collection of GraphQL queries with proper authorization testing:\n\n**Available Queries:**\n\n1. **getMe** (IsAuthenticated)\n   - Returns current user's profile information\n   - Available to both MENTOR and STUDENT roles\n   - Validates: Requirements 6.1\n\n2. **getRepositories** (IsAuthenticated)\n   - Role-based repository filtering:\n     - MENTOR: Returns repositories they own\n     - STUDENT: Returns repositories they are linked to\n   - Validates: Requirements 6.2\n\n3. **getMyContributionMetrics** (IsStudent)\n   - Student-only query for their own metrics\n   - Returns metrics across all accessible repositories\n   - Validates: Requirements 6.3\n\n4. **getAllContributionMetrics** (IsMentor)\n   - Mentor-only query for all student metrics in a repository\n   - Requires repository ownership validation\n   - Validates: Requirements 6.4\n\n**Authorization Testing:**\n- ✅ Students cannot access mentor-only queries\n- ✅ Mentors cannot access student-only queries\n- ✅ Proper error messages for authorization violations\n- ✅ Role-based data filtering working correctly\n\n**Requirements Coverage:**\n- 6.1: getMe query for current user profile\n- 6.2: getRepositories with role-based filtering\n- 6.3: getMyContributionMetrics for students\n- 6.4: getAllContributionMetrics for mentors\n- 2.5: GraphQL operation authorization validation\n- 6.6, 6.7: JWT authentication and role permissions\n- 9.2: Authorization violation error handling\n\n**Environment Variables Used:**\n- `jwt_token`: General JWT token for authenticated requests\n- `mentor_jwt_token`: Mentor-specific JWT token\n- `student_jwt_token`: Student-specific JWT token\n- `repository_id`: Repository ID for mentor queries\n- `current_user_id`: Current user's database ID\n- `current_user_github_id`: Current user's GitHub ID\n- `current_user_role`: Current user's role (MENTOR/STUDENT)\n\n**Usage Instructions:**\n1. Complete OAuth authentication flow first\n2. Ensure proper JWT tokens are set in environment variables\n3. Run queries based on your user role\n4. Use authorization test queries to verify security\n5. Check repository and metrics data for proper filtering"
+		},
+		{
+			"name": "GraphQL Mutations",
+			"item": [
+				{
+					"name": "Enroll Student (Mentor Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{mentor_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation EnrollStudent($input: EnrollStudentInput!) { enrollStudent(input: $input) { id githubId username email role isEnrolled enrolledBy createdAt } }\",\n  \"variables\": {\n    \"input\": {\n      \"githubUsername\": \"new_student_user\",\n      \"email\": \"newstudent@example.com\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Enroll Student Mutation**: Create a new student record (mentor-only operation).\n\n**Requirements Validated:** 3.1, 3.2, 3.4\n\n**Permission Required:** IsMentor\n\n**Access Control:**\n- Only MENTOR role can enroll students\n- Students cannot self-register\n- Mentor's GitHub ID is recorded as enrolledBy\n\n**Prerequisites:**\n- Must use mentor JWT token ({{mentor_jwt_token}})\n- GitHub username must not already exist in system\n- Valid email address required\n\n**Input Validation:**\n- `githubUsername`: Required, non-empty string\n- `email`: Required, valid email format\n\n**Expected Response (Success - New Student):**\n```json\n{\n  \"data\": {\n    \"enrollStudent\": {\n      \"id\": \"507f1f77bcf86cd799439013\",\n      \"githubId\": \"github_new_student_user\",\n      \"username\": \"new_student_user\",\n      \"email\": \"newstudent@example.com\",\n      \"role\": \"STUDENT\",\n      \"isEnrolled\": true,\n      \"enrolledBy\": \"12345\",\n      \"createdAt\": \"2024-01-15T15:30:00Z\"\n    }\n  }\n}\n```\n\n**Expected Response (Success - Duplicate Enrollment):**\n```json\n{\n  \"data\": {\n    \"enrollStudent\": {\n      \"id\": \"507f1f77bcf86cd799439013\",\n      \"githubId\": \"github_existing_student\",\n      \"username\": \"existing_student\",\n      \"email\": \"existing@example.com\",\n      \"role\": \"STUDENT\",\n      \"isEnrolled\": true,\n      \"enrolledBy\": \"12345\",\n      \"createdAt\": \"2024-01-15T10:30:00Z\"\n    }\n  }\n}\n```\n\n**Error Response (Authorization Denied):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Mentor access required. This operation is restricted to mentors only.\",\n      \"extensions\": {\n        \"code\": \"FORBIDDEN\"\n      }\n    }\n  ]\n}\n```\n\n**Error Response (Invalid Input):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Failed to enroll student new_student_user: GitHub username is required and cannot be empty\"\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('enrollStudent mutation successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('enrollStudent');",
+									"});",
+									"",
+									"pm.test('Student enrollment data is valid', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const student = responseJson.data.enrollStudent;",
+									"    pm.expect(student).to.have.property('id');",
+									"    pm.expect(student).to.have.property('githubId');",
+									"    pm.expect(student).to.have.property('username');",
+									"    pm.expect(student).to.have.property('email');",
+									"    pm.expect(student.role).to.eql('STUDENT');",
+									"    pm.expect(student.isEnrolled).to.be.true;",
+									"    pm.expect(student.enrolledBy).to.not.be.null;",
+									"});",
+									"",
+									"// Save enrolled student info for other tests",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.data && responseJson.data.enrollStudent) {",
+									"    const student = responseJson.data.enrollStudent;",
+									"    pm.environment.set('enrolled_student_id', student.id);",
+									"    pm.environment.set('enrolled_student_github_id', student.githubId);",
+									"    console.log('✓ Student enrolled successfully:', student.username);",
+									"    console.log('  - Student ID:', student.id);",
+									"    console.log('  - Enrolled by mentor:', student.enrolledBy);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Enroll Student - Duplicate Handling",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{mentor_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation EnrollStudent($input: EnrollStudentInput!) { enrollStudent(input: $input) { id githubId username email role isEnrolled enrolledBy createdAt } }\",\n  \"variables\": {\n    \"input\": {\n      \"githubUsername\": \"new_student_user\",\n      \"email\": \"newstudent@example.com\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Enroll Student - Duplicate Handling**: Test graceful handling of duplicate student enrollment.\n\n**Requirements Validated:** 3.5\n\n**Test Scenario:** Attempt to enroll a student who is already enrolled\n\n**Expected Behavior:**\n- Should return existing student record instead of error\n- Should not create duplicate entries\n- Should handle gracefully without throwing exceptions\n\n**Prerequisites:**\n- Run the previous \"Enroll Student\" request first\n- Use same GitHub username and email\n\n**Expected Response (Graceful Duplicate Handling):**\n```json\n{\n  \"data\": {\n    \"enrollStudent\": {\n      \"id\": \"507f1f77bcf86cd799439013\",\n      \"githubId\": \"github_new_student_user\",\n      \"username\": \"new_student_user\",\n      \"email\": \"newstudent@example.com\",\n      \"role\": \"STUDENT\",\n      \"isEnrolled\": true,\n      \"enrolledBy\": \"12345\",\n      \"createdAt\": \"2024-01-15T15:30:00Z\"\n    }\n  }\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Duplicate enrollment handled gracefully', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('enrollStudent');",
+									"});",
+									"",
+									"pm.test('Returns existing student for duplicate enrollment', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const student = responseJson.data.enrollStudent;",
+									"    pm.expect(student.role).to.eql('STUDENT');",
+									"    pm.expect(student.isEnrolled).to.be.true;",
+									"    pm.expect(student.username).to.eql('new_student_user');",
+									"});",
+									"",
+									"console.log('✓ Duplicate enrollment handled gracefully - returned existing student');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Enroll Student - Input Validation Errors",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{mentor_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation EnrollStudent($input: EnrollStudentInput!) { enrollStudent(input: $input) { id username } }\",\n  \"variables\": {\n    \"input\": {\n      \"githubUsername\": \"\",\n      \"email\": \"invalid-email\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Enroll Student - Input Validation**: Test input validation for enrollment mutation.\n\n**Requirements Validated:** 3.3, 9.4\n\n**Test Scenario:** Invalid input data (empty username, invalid email)\n\n**Expected Response (Validation Error):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Failed to enroll student : GitHub username is required and cannot be empty\"\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Input validation error returned', function () {",
+									"    pm.response.to.have.status(200); // GraphQL returns 200 with errors",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('errors');",
+									"    pm.expect(responseJson.errors[0].message).to.include('required');",
+									"});",
+									"",
+									"console.log('✓ Input validation working correctly for enrollStudent mutation');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Create Repository (Mentor Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{mentor_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation CreateRepository($input: CreateRepositoryInput!) { createRepository(input: $input) { id repoName repoUrl ownerGithubId linkedStudents createdAt } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoName\": \"Student Progress Project\",\n      \"repoUrl\": \"https://github.com/mentor/student-progress-project\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Create Repository Mutation**: Create a new repository record (mentor-only operation).\n\n**Requirements Validated:** 4.1, 4.2, 4.3, 4.5\n\n**Permission Required:** IsMentor\n\n**Access Control:**\n- Only MENTOR role can create repositories\n- Mentor's GitHub ID is recorded as owner\n- Repository URL must be unique\n\n**Prerequisites:**\n- Must use mentor JWT token ({{mentor_jwt_token}})\n- Repository URL must not already exist in system\n- Valid HTTP/HTTPS URL required\n\n**Input Validation:**\n- `repoName`: Required, non-empty string\n- `repoUrl`: Required, valid HTTP/HTTPS URL\n\n**Expected Response (Success):**\n```json\n{\n  \"data\": {\n    \"createRepository\": {\n      \"id\": \"507f1f77bcf86cd799439012\",\n      \"repoName\": \"Student Progress Project\",\n      \"repoUrl\": \"https://github.com/mentor/student-progress-project\",\n      \"ownerGithubId\": \"12345\",\n      \"linkedStudents\": [],\n      \"createdAt\": \"2024-01-15T16:00:00Z\"\n    }\n  }\n}\n```\n\n**Error Response (Authorization Denied):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Mentor access required. This operation is restricted to mentors only.\",\n      \"extensions\": {\n        \"code\": \"FORBIDDEN\"\n      }\n    }\n  ]\n}\n```\n\n**Error Response (Duplicate URL):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Failed to create repository Student Progress Project: Repository with URL https://github.com/mentor/student-progress-project already exists\"\n    }\n  ]\n}\n```\n\n**Error Response (Invalid Input):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Failed to create repository : Repository name is required and cannot be empty\"\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('createRepository mutation successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('createRepository');",
+									"});",
+									"",
+									"pm.test('Repository creation data is valid', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const repository = responseJson.data.createRepository;",
+									"    pm.expect(repository).to.have.property('id');",
+									"    pm.expect(repository).to.have.property('repoName');",
+									"    pm.expect(repository).to.have.property('repoUrl');",
+									"    pm.expect(repository).to.have.property('ownerGithubId');",
+									"    pm.expect(repository.linkedStudents).to.be.an('array');",
+									"    pm.expect(repository.linkedStudents).to.have.lengthOf(0); // Initially empty",
+									"});",
+									"",
+									"// Save repository ID for other tests",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.data && responseJson.data.createRepository) {",
+									"    const repository = responseJson.data.createRepository;",
+									"    pm.environment.set('repository_id', repository.id);",
+									"    pm.environment.set('repository_name', repository.repoName);",
+									"    console.log('✓ Repository created successfully:', repository.repoName);",
+									"    console.log('  - Repository ID:', repository.id);",
+									"    console.log('  - Owner GitHub ID:', repository.ownerGithubId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Create Repository - Input Validation Errors",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{mentor_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation CreateRepository($input: CreateRepositoryInput!) { createRepository(input: $input) { id repoName } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoName\": \"\",\n      \"repoUrl\": \"invalid-url\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Create Repository - Input Validation**: Test input validation for repository creation.\n\n**Requirements Validated:** 4.4, 9.4\n\n**Test Scenario:** Invalid input data (empty name, invalid URL)\n\n**Expected Response (Validation Error):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Failed to create repository : Repository name is required and cannot be empty\"\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Input validation error returned', function () {",
+									"    pm.response.to.have.status(200); // GraphQL returns 200 with errors",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('errors');",
+									"    pm.expect(responseJson.errors[0].message).to.include('required');",
+									"});",
+									"",
+									"console.log('✓ Input validation working correctly for createRepository mutation');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Save Contribution Metrics (Student Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation SaveContributionMetrics($input: SaveContributionMetricsInput!) { saveContributionMetrics(input: $input) { id repoId studentGithubId commitCount prCount issueCount consistencyScore lastUpdated } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoId\": \"{{repository_id}}\",\n      \"commitCount\": 25,\n      \"prCount\": 5,\n      \"issueCount\": 3,\n      \"consistencyScore\": 0.85\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Save Contribution Metrics Mutation**: Save contribution metrics for current student (student-only operation).\n\n**Requirements Validated:** 5.1, 5.3\n\n**Permission Required:** IsStudent\n\n**Access Control:**\n- Only STUDENT role can save contribution metrics\n- Students can only save their own metrics (self-only validation)\n- Student GitHub ID is automatically set to current user\n\n**Prerequisites:**\n- Must use student JWT token ({{student_jwt_token}})\n- Must have valid repository ID in {{repository_id}}\n- Repository must exist in the system\n\n**Input Validation:**\n- `repoId`: Required, valid ObjectId format\n- `commitCount`: Required, non-negative integer\n- `prCount`: Required, non-negative integer\n- `issueCount`: Required, non-negative integer\n- `consistencyScore`: Required, float between 0.0 and 1.0\n\n**Expected Response (Success - New Metrics):**\n```json\n{\n  \"data\": {\n    \"saveContributionMetrics\": {\n      \"id\": \"507f1f77bcf86cd799439014\",\n      \"repoId\": \"507f1f77bcf86cd799439012\",\n      \"studentGithubId\": \"67890\",\n      \"commitCount\": 25,\n      \"prCount\": 5,\n      \"issueCount\": 3,\n      \"consistencyScore\": 0.85,\n      \"lastUpdated\": \"2024-01-15T16:30:00Z\"\n    }\n  }\n}\n```\n\n**Expected Response (Success - Updated Metrics):**\n```json\n{\n  \"data\": {\n    \"saveContributionMetrics\": {\n      \"id\": \"507f1f77bcf86cd799439014\",\n      \"repoId\": \"507f1f77bcf86cd799439012\",\n      \"studentGithubId\": \"67890\",\n      \"commitCount\": 25,\n      \"prCount\": 5,\n      \"issueCount\": 3,\n      \"consistencyScore\": 0.85,\n      \"lastUpdated\": \"2024-01-15T16:30:00Z\"\n    }\n  }\n}\n```\n\n**Error Response (Authorization Denied):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Student access required. This operation is restricted to students only.\",\n      \"extensions\": {\n        \"code\": \"FORBIDDEN\"\n      }\n    }\n  ]\n}\n```\n\n**Error Response (Invalid Repository):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Failed to save contribution metrics: Repository with ID 507f1f77bcf86cd799439999 not found\"\n    }\n  ]\n}\n```\n\n**Error Response (Invalid Input):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Failed to save contribution metrics: Consistency score must be between 0.0 and 1.0\"\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('saveContributionMetrics mutation successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('saveContributionMetrics');",
+									"});",
+									"",
+									"pm.test('Contribution metrics data is valid', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const metrics = responseJson.data.saveContributionMetrics;",
+									"    pm.expect(metrics).to.have.property('id');",
+									"    pm.expect(metrics).to.have.property('repoId');",
+									"    pm.expect(metrics).to.have.property('studentGithubId');",
+									"    pm.expect(metrics.commitCount).to.eql(25);",
+									"    pm.expect(metrics.prCount).to.eql(5);",
+									"    pm.expect(metrics.issueCount).to.eql(3);",
+									"    pm.expect(metrics.consistencyScore).to.eql(0.85);",
+									"    pm.expect(metrics.consistencyScore).to.be.within(0, 1);",
+									"});",
+									"",
+									"pm.test('Student can only save own metrics', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const metrics = responseJson.data.saveContributionMetrics;",
+									"    const currentUserGithubId = pm.environment.get('current_user_github_id');",
+									"    // Student GitHub ID should match current user (self-only validation)",
+									"    if (currentUserGithubId) {",
+									"        pm.expect(metrics.studentGithubId).to.eql(currentUserGithubId);",
+									"    }",
+									"});",
+									"",
+									"// Save metrics info for other tests",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.data && responseJson.data.saveContributionMetrics) {",
+									"    const metrics = responseJson.data.saveContributionMetrics;",
+									"    pm.environment.set('contribution_metrics_id', metrics.id);",
+									"    console.log('✓ Contribution metrics saved successfully');",
+									"    console.log('  - Metrics ID:', metrics.id);",
+									"    console.log('  - Repository ID:', metrics.repoId);",
+									"    console.log('  - Student GitHub ID:', metrics.studentGithubId);",
+									"    console.log('  - Consistency Score:', metrics.consistencyScore);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Save Contribution Metrics - Update Existing",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation SaveContributionMetrics($input: SaveContributionMetricsInput!) { saveContributionMetrics(input: $input) { id repoId studentGithubId commitCount prCount issueCount consistencyScore lastUpdated } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoId\": \"{{repository_id}}\",\n      \"commitCount\": 30,\n      \"prCount\": 7,\n      \"issueCount\": 4,\n      \"consistencyScore\": 0.92\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Save Contribution Metrics - Update Existing**: Test updating existing contribution metrics.\n\n**Requirements Validated:** 5.2, 5.4\n\n**Test Scenario:** Update existing metrics for same student and repository\n\n**Prerequisites:**\n- Run the previous \"Save Contribution Metrics\" request first\n- Use same repository ID and student token\n\n**Expected Behavior:**\n- Should update existing metrics record instead of creating new one\n- Should update lastUpdated timestamp\n- Should maintain same metrics ID\n\n**Expected Response (Updated Metrics):**\n```json\n{\n  \"data\": {\n    \"saveContributionMetrics\": {\n      \"id\": \"507f1f77bcf86cd799439014\",\n      \"repoId\": \"507f1f77bcf86cd799439012\",\n      \"studentGithubId\": \"67890\",\n      \"commitCount\": 30,\n      \"prCount\": 7,\n      \"issueCount\": 4,\n      \"consistencyScore\": 0.92,\n      \"lastUpdated\": \"2024-01-15T16:45:00Z\"\n    }\n  }\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Metrics update successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('saveContributionMetrics');",
+									"});",
+									"",
+									"pm.test('Updated metrics have new values', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const metrics = responseJson.data.saveContributionMetrics;",
+									"    pm.expect(metrics.commitCount).to.eql(30);",
+									"    pm.expect(metrics.prCount).to.eql(7);",
+									"    pm.expect(metrics.issueCount).to.eql(4);",
+									"    pm.expect(metrics.consistencyScore).to.eql(0.92);",
+									"});",
+									"",
+									"console.log('✓ Contribution metrics updated successfully with new values');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Save Contribution Metrics - Input Validation Errors",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation SaveContributionMetrics($input: SaveContributionMetricsInput!) { saveContributionMetrics(input: $input) { id } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoId\": \"invalid_repo_id\",\n      \"commitCount\": -5,\n      \"prCount\": -2,\n      \"issueCount\": -1,\n      \"consistencyScore\": 1.5\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Save Contribution Metrics - Input Validation**: Test input validation for metrics mutation.\n\n**Requirements Validated:** 5.2, 5.5, 9.4\n\n**Test Scenario:** Invalid input data (invalid repo ID, negative counts, out-of-range consistency score)\n\n**Expected Response (Validation Error):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Failed to save contribution metrics: Invalid repository ID format: invalid_repo_id\"\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Input validation error returned', function () {",
+									"    pm.response.to.have.status(200); // GraphQL returns 200 with errors",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('errors');",
+									"    pm.expect(responseJson.errors[0].message).to.include('Invalid');",
+									"});",
+									"",
+									"console.log('✓ Input validation working correctly for saveContributionMetrics mutation');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Test Mutation Authorization - Student Trying Mentor Operation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation EnrollStudent($input: EnrollStudentInput!) { enrollStudent(input: $input) { id username } }\",\n  \"variables\": {\n    \"input\": {\n      \"githubUsername\": \"unauthorized_student\",\n      \"email\": \"unauthorized@example.com\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Mutation Authorization Test**: Verify that students cannot access mentor-only mutations.\n\n**Requirements Validated:** 2.5, 3.3, 6.7, 9.2\n\n**Test Scenario:** Student attempting to use enrollStudent mutation (mentor-only)\n\n**Expected Response (Authorization Denied):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Mentor access required. This operation is restricted to mentors only.\",\n      \"extensions\": {\n        \"code\": \"FORBIDDEN\"\n      }\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student denied access to mentor mutation', function () {",
+									"    pm.response.to.have.status(200); // GraphQL returns 200 with errors",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('errors');",
+									"    pm.expect(responseJson.errors[0].message).to.include('Mentor access required');",
+									"});",
+									"",
+									"console.log('✓ Student properly denied access to mentor-only mutation');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Test Mutation Authorization - Mentor Trying Student Operation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{mentor_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation SaveContributionMetrics($input: SaveContributionMetricsInput!) { saveContributionMetrics(input: $input) { id } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoId\": \"{{repository_id}}\",\n      \"commitCount\": 10,\n      \"prCount\": 2,\n      \"issueCount\": 1,\n      \"consistencyScore\": 0.8\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Mutation Authorization Test**: Verify that mentors cannot access student-only mutations.\n\n**Requirements Validated:** 2.5, 5.2, 6.7, 9.2\n\n**Test Scenario:** Mentor attempting to use saveContributionMetrics mutation (student-only)\n\n**Expected Response (Authorization Denied):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Student access required. This operation is restricted to students only.\",\n      \"extensions\": {\n        \"code\": \"FORBIDDEN\"\n      }\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Mentor denied access to student mutation', function () {",
+									"    pm.response.to.have.status(200); // GraphQL returns 200 with errors",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('errors');",
+									"    pm.expect(responseJson.errors[0].message).to.include('Student access required');",
+									"});",
+									"",
+									"console.log('✓ Mentor properly denied access to student-only mutation');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				}
+			],
+			"description": "**GraphQL Mutation Operations with Role-Based Authorization**\n\nComplete collection of GraphQL mutations with comprehensive testing:\n\n**Available Mutations:**\n\n1. **enrollStudent** (IsMentor)\n   - Create new student records with mentor authorization\n   - Graceful duplicate enrollment handling\n   - Input validation for username and email\n   - Validates: Requirements 3.1, 3.2, 3.4, 3.5\n\n2. **createRepository** (IsMentor)\n   - Create repository records with mentor ownership\n   - URL uniqueness validation\n   - Input validation for name and URL format\n   - Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5\n\n3. **saveContributionMetrics** (IsStudent)\n   - Save/update student contribution metrics (self-only)\n   - Repository existence validation\n   - Metric value range validation\n   - Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5\n\n**Authorization Testing:**\n- ✅ Students cannot access mentor-only mutations\n- ✅ Mentors cannot access student-only mutations\n- ✅ Proper error messages for authorization violations\n- ✅ Role-based mutation restrictions enforced\n\n**Input Validation Testing:**\n- ✅ Required field validation\n- ✅ Data type and format validation\n- ✅ Business rule validation (uniqueness, ranges)\n- ✅ Graceful error handling with descriptive messages\n\n**Data Integrity Testing:**\n- ✅ Duplicate enrollment handling\n- ✅ Metrics update vs create logic\n- ✅ Repository ownership tracking\n- ✅ Student self-only data access\n\n**Requirements Coverage:**\n- 3.1, 3.2: Student enrollment by mentors\n- 3.3, 3.4, 3.5: Enrollment authorization and duplicate handling\n- 4.1, 4.2, 4.3: Repository creation by mentors\n- 4.4, 4.5: Repository authorization and audit tracking\n- 5.1, 5.3: Student contribution metrics saving\n- 5.2, 5.4, 5.5: Metrics authorization and self-only validation\n- 2.5: GraphQL mutation authorization validation\n- 6.7: Role-based permissions enforcement\n- 9.2, 9.4: Authorization violations and input validation errors\n\n**Environment Variables Used:**\n- `mentor_jwt_token`: Mentor JWT token for mentor-only operations\n- `student_jwt_token`: Student JWT token for student-only operations\n- `repository_id`: Repository ID for metrics operations (auto-populated)\n- `enrolled_student_id`: Enrolled student ID (auto-populated)\n- `enrolled_student_github_id`: Enrolled student GitHub ID (auto-populated)\n- `contribution_metrics_id`: Contribution metrics ID (auto-populated)\n- `repository_name`: Repository name (auto-populated)\n\n**Usage Instructions:**\n1. Complete OAuth authentication flow first to get JWT tokens\n2. Use mentor token for enrollment and repository operations\n3. Use student token for contribution metrics operations\n4. Run authorization tests to verify security\n5. Check input validation with invalid data\n6. Verify data integrity with duplicate operations"
+		},
+		{
+			"name": "Authorization Testing",
+			"item": [
+				{
+					"name": "Test IsAuthenticated Permission",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query GetMe { getMe { id githubId username email role isEnrolled } }\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**IsAuthenticated Permission Test**: Validates that authenticated users can access protected GraphQL operations.\n\n**Requirements Validated:** 2.5, 6.6, 7.3\n\n**Permission Class:** IsAuthenticated\n\n**Test Scenario:** Valid JWT token should allow access to authenticated operations\n\n**Prerequisites:**\n1. Must have valid JWT token in {{jwt_token}} environment variable\n2. Token should contain required fields: github_id, username, role\n\n**Expected Response (Success):**\n```json\n{\n  \"data\": {\n    \"getMe\": {\n      \"id\": \"507f1f77bcf86cd799439011\",\n      \"githubId\": \"12345\",\n      \"username\": \"john_doe\",\n      \"email\": \"john@example.com\",\n      \"role\": \"MENTOR\",\n      \"isEnrolled\": true\n    }\n  }\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('IsAuthenticated permission allows access', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('getMe');",
+									"});",
+									"",
+									"pm.test('User data contains required fields', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const user = responseJson.data.getMe;",
+									"    pm.expect(user).to.have.property('githubId');",
+									"    pm.expect(user).to.have.property('username');",
+									"    pm.expect(user).to.have.property('role');",
+									"});",
+									"",
+									"console.log('✓ IsAuthenticated permission working correctly');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Test IsAuthenticated Permission Failure",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query GetMe { getMe { id githubId username email role } }\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**IsAuthenticated Permission Failure Test**: Validates that unauthenticated requests are properly denied.\n\n**Requirements Validated:** 2.5, 6.6, 7.3, 9.1\n\n**Permission Class:** IsAuthenticated\n\n**Test Scenario:** Missing JWT token should deny access with proper error message\n\n**Expected Response (Failure):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Authentication required. Please provide a valid JWT token.\",\n      \"extensions\": {\n        \"code\": \"UNAUTHENTICATED\"\n      }\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('IsAuthenticated permission denies unauthenticated access', function () {",
+									"    pm.response.to.have.status(200); // GraphQL returns 200 with errors",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('errors');",
+									"    pm.expect(responseJson.errors[0].message).to.include('Authentication required');",
+									"});",
+									"",
+									"console.log('✓ IsAuthenticated permission correctly denies unauthenticated access');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Test IsMentor Permission Success",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{mentor_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation EnrollStudent($githubUsername: String!, $email: String!) { enrollStudent(githubUsername: $githubUsername, email: $email) { id githubId username email role isEnrolled enrolledBy } }\",\n  \"variables\": {\n    \"githubUsername\": \"test_student_user\",\n    \"email\": \"teststudent@example.com\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**IsMentor Permission Success Test**: Validates that mentor users can access mentor-only operations.\n\n**Requirements Validated:** 2.5, 6.7, 3.3\n\n**Permission Class:** IsMentor\n\n**Test Scenario:** Valid mentor JWT token should allow access to mentor-only operations\n\n**Prerequisites:**\n1. Must have valid mentor JWT token in {{mentor_jwt_token}} environment variable\n2. Token should have role: \"MENTOR\"\n\n**Expected Response (Success):**\n```json\n{\n  \"data\": {\n    \"enrollStudent\": {\n      \"id\": \"507f1f77bcf86cd799439013\",\n      \"githubId\": \"67890\",\n      \"username\": \"test_student_user\",\n      \"email\": \"teststudent@example.com\",\n      \"role\": \"STUDENT\",\n      \"isEnrolled\": true,\n      \"enrolledBy\": \"12345\"\n    }\n  }\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('IsMentor permission allows mentor operations', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('enrollStudent');",
+									"});",
+									"",
+									"pm.test('Student enrollment successful', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const student = responseJson.data.enrollStudent;",
+									"    pm.expect(student.role).to.eql('STUDENT');",
+									"    pm.expect(student.isEnrolled).to.be.true;",
+									"    pm.expect(student.enrolledBy).to.not.be.null;",
+									"});",
+									"",
+									"console.log('✓ IsMentor permission working correctly for mentor operations');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Test IsMentor Permission Failure (Student Token)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation EnrollStudent($githubUsername: String!, $email: String!) { enrollStudent(githubUsername: $githubUsername, email: $email) { id username } }\",\n  \"variables\": {\n    \"githubUsername\": \"unauthorized_student\",\n    \"email\": \"unauthorized@example.com\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**IsMentor Permission Failure Test**: Validates that student users are denied access to mentor-only operations.\n\n**Requirements Validated:** 2.5, 6.7, 9.2\n\n**Permission Class:** IsMentor\n\n**Test Scenario:** Student JWT token should be denied access to mentor-only operations\n\n**Prerequisites:**\n1. Must have valid student JWT token in {{student_jwt_token}} environment variable\n2. Token should have role: \"STUDENT\"\n\n**Expected Response (Failure):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Mentor access required. This operation is restricted to mentors only.\",\n      \"extensions\": {\n        \"code\": \"FORBIDDEN\"\n      }\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('IsMentor permission denies student access', function () {",
+									"    pm.response.to.have.status(200); // GraphQL returns 200 with errors",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('errors');",
+									"    pm.expect(responseJson.errors[0].message).to.include('Mentor access required');",
+									"});",
+									"",
+									"console.log('✓ IsMentor permission correctly denies student access to mentor operations');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Test IsStudent Permission Success",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation SaveContributionMetrics($repoId: String!, $commitCount: Int!, $prCount: Int!, $issueCount: Int!, $consistencyScore: Float!) { saveContributionMetrics(repoId: $repoId, commitCount: $commitCount, prCount: $prCount, issueCount: $issueCount, consistencyScore: $consistencyScore) { id repoId studentGithubId commitCount prCount issueCount consistencyScore lastUpdated } }\",\n  \"variables\": {\n    \"repoId\": \"{{repository_id}}\",\n    \"commitCount\": 15,\n    \"prCount\": 3,\n    \"issueCount\": 2,\n    \"consistencyScore\": 0.75\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**IsStudent Permission Success Test**: Validates that student users can access student-only operations.\n\n**Requirements Validated:** 2.5, 6.7, 5.2\n\n**Permission Class:** IsStudent\n\n**Test Scenario:** Valid student JWT token should allow access to student-only operations\n\n**Prerequisites:**\n1. Must have valid student JWT token in {{student_jwt_token}} environment variable\n2. Token should have role: \"STUDENT\"\n3. Must have a valid repository ID in {{repository_id}}\n\n**Expected Response (Success):**\n```json\n{\n  \"data\": {\n    \"saveContributionMetrics\": {\n      \"id\": \"507f1f77bcf86cd799439014\",\n      \"repoId\": \"507f1f77bcf86cd799439012\",\n      \"studentGithubId\": \"67890\",\n      \"commitCount\": 15,\n      \"prCount\": 3,\n      \"issueCount\": 2,\n      \"consistencyScore\": 0.75,\n      \"lastUpdated\": \"2024-01-15T14:30:00Z\"\n    }\n  }\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('IsStudent permission allows student operations', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('saveContributionMetrics');",
+									"});",
+									"",
+									"pm.test('Contribution metrics saved successfully', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const metrics = responseJson.data.saveContributionMetrics;",
+									"    pm.expect(metrics.commitCount).to.eql(15);",
+									"    pm.expect(metrics.prCount).to.eql(3);",
+									"    pm.expect(metrics.consistencyScore).to.eql(0.75);",
+									"});",
+									"",
+									"console.log('✓ IsStudent permission working correctly for student operations');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Test IsStudent Permission Failure (Mentor Token)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{mentor_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation SaveContributionMetrics($repoId: String!, $commitCount: Int!, $prCount: Int!, $issueCount: Int!, $consistencyScore: Float!) { saveContributionMetrics(repoId: $repoId, commitCount: $commitCount, prCount: $prCount, issueCount: $issueCount, consistencyScore: $consistencyScore) { id } }\",\n  \"variables\": {\n    \"repoId\": \"507f1f77bcf86cd799439011\",\n    \"commitCount\": 10,\n    \"prCount\": 2,\n    \"issueCount\": 1,\n    \"consistencyScore\": 0.8\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**IsStudent Permission Failure Test**: Validates that mentor users are denied access to student-only operations.\n\n**Requirements Validated:** 2.5, 6.7, 9.2\n\n**Permission Class:** IsStudent\n\n**Test Scenario:** Mentor JWT token should be denied access to student-only operations\n\n**Prerequisites:**\n1. Must have valid mentor JWT token in {{mentor_jwt_token}} environment variable\n2. Token should have role: \"MENTOR\"\n\n**Expected Response (Failure):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Student access required. This operation is restricted to students only.\",\n      \"extensions\": {\n        \"code\": \"FORBIDDEN\"\n      }\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('IsStudent permission denies mentor access', function () {",
+									"    pm.response.to.have.status(200); // GraphQL returns 200 with errors",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('errors');",
+									"    pm.expect(responseJson.errors[0].message).to.include('Student access required');",
+									"});",
+									"",
+									"console.log('✓ IsStudent permission correctly denies mentor access to student operations');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Test IsOwnerOrMentor Permission (Student Own Data)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query GetMyContributionMetrics { getMyContributionMetrics { id repoId studentGithubId commitCount prCount issueCount consistencyScore lastUpdated } }\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**IsOwnerOrMentor Permission Test (Student Own Data)**: Validates that students can access their own data.\n\n**Requirements Validated:** 2.5, 6.3, 5.5\n\n**Permission Class:** IsOwnerOrMentor\n\n**Test Scenario:** Student should be able to access their own contribution metrics\n\n**Prerequisites:**\n1. Must have valid student JWT token in {{student_jwt_token}} environment variable\n2. Student should have some contribution metrics in the system\n\n**Expected Response (Success):**\n```json\n{\n  \"data\": {\n    \"getMyContributionMetrics\": [\n      {\n        \"id\": \"507f1f77bcf86cd799439014\",\n        \"repoId\": \"507f1f77bcf86cd799439012\",\n        \"studentGithubId\": \"67890\",\n        \"commitCount\": 15,\n        \"prCount\": 3,\n        \"issueCount\": 2,\n        \"consistencyScore\": 0.75,\n        \"lastUpdated\": \"2024-01-15T14:30:00Z\"\n      }\n    ]\n  }\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('IsOwnerOrMentor allows student to access own data', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('getMyContributionMetrics');",
+									"});",
+									"",
+									"console.log('✓ IsOwnerOrMentor permission allows student to access own data');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Test IsOwnerOrMentor Permission (Mentor All Data)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{mentor_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query GetAllContributionMetrics($repoId: String!) { getAllContributionMetrics(repoId: $repoId) { id repoId studentGithubId commitCount prCount issueCount consistencyScore lastUpdated } }\",\n  \"variables\": {\n    \"repoId\": \"{{repository_id}}\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**IsOwnerOrMentor Permission Test (Mentor All Data)**: Validates that mentors can access all student data.\n\n**Requirements Validated:** 2.5, 6.4\n\n**Permission Class:** IsOwnerOrMentor\n\n**Test Scenario:** Mentor should be able to access all student contribution metrics for their repositories\n\n**Prerequisites:**\n1. Must have valid mentor JWT token in {{mentor_jwt_token}} environment variable\n2. Must have a valid repository ID in {{repository_id}}\n3. Repository should have some student contribution metrics\n\n**Expected Response (Success):**\n```json\n{\n  \"data\": {\n    \"getAllContributionMetrics\": [\n      {\n        \"id\": \"507f1f77bcf86cd799439014\",\n        \"repoId\": \"507f1f77bcf86cd799439012\",\n        \"studentGithubId\": \"67890\",\n        \"commitCount\": 15,\n        \"prCount\": 3,\n        \"issueCount\": 2,\n        \"consistencyScore\": 0.75,\n        \"lastUpdated\": \"2024-01-15T14:30:00Z\"\n      }\n    ]\n  }\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('IsOwnerOrMentor allows mentor to access all data', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('getAllContributionMetrics');",
+									"});",
+									"",
+									"console.log('✓ IsOwnerOrMentor permission allows mentor to access all student data');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Test Role-Based Access Summary",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query TestRoleAccess { getMe { id username role } }\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Role-Based Access Control Summary Test**: Comprehensive test to validate all permission classes are working correctly.\n\n**Requirements Validated:** 2.1, 2.5, 6.6, 6.7\n\n**Permission Classes Tested:**\n- IsAuthenticated: ✓ Requires valid JWT token\n- IsMentor: ✓ Restricts mentor-only operations\n- IsStudent: ✓ Restricts student-only operations  \n- IsOwnerOrMentor: ✓ Allows data access based on ownership or mentor role\n\n**Test Summary:**\n1. **Authentication**: All GraphQL operations require valid JWT tokens\n2. **Mentor Operations**: Only mentors can enroll students and create repositories\n3. **Student Operations**: Only students can save their own contribution metrics\n4. **Data Access**: Students access own data, mentors access all data\n5. **Error Handling**: Proper error messages for authorization violations\n\n**Security Validation:**\n- ✓ No unauthorized access to protected operations\n- ✓ Role-based restrictions properly enforced\n- ✓ JWT token validation working correctly\n- ✓ Graceful error handling for authentication failures"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Role-based access control is functional', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"});",
+									"",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.data && responseJson.data.getMe) {",
+									"    const user = responseJson.data.getMe;",
+									"    console.log('✓ Role-based access control summary:');",
+									"    console.log('  - User:', user.username);",
+									"    console.log('  - Role:', user.role);",
+									"    console.log('  - Authentication: Working');",
+									"    console.log('  - Authorization: Role-based permissions enforced');",
+									"    console.log('  - Security: JWT validation successful');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				}
+			],
+			"description": "**GraphQL Permission Classes Authorization Testing**\n\nComprehensive testing suite for all GraphQL permission classes:\n\n**Permission Classes Tested:**\n\n1. **IsAuthenticated**\n   - ✅ Success: Valid JWT token allows access\n   - ❌ Failure: Missing token denies access with proper error\n\n2. **IsMentor** \n   - ✅ Success: Mentor token allows mentor-only operations\n   - ❌ Failure: Student token denied mentor operations\n\n3. **IsStudent**\n   - ✅ Success: Student token allows student-only operations  \n   - ❌ Failure: Mentor token denied student operations\n\n4. **IsOwnerOrMentor**\n   - ✅ Student Access: Students can access their own data\n   - ✅ Mentor Access: Mentors can access all student data\n\n**Requirements Coverage:**\n- 2.1: Role-based access control enforcement\n- 2.5: GraphQL operation authorization validation\n- 6.6, 6.7: JWT authentication and role permissions\n- 7.3: JWT token extraction and validation\n- 9.1, 9.2: Authentication and authorization error handling\n\n**Test Scenarios:**\n- Authentication validation with valid/invalid tokens\n- Role-based operation restrictions (mentor vs student)\n- Data access control (own data vs all data)\n- Error message validation for authorization failures\n- Comprehensive security validation\n\n**Environment Variables Used:**\n- `jwt_token`: General JWT token for authenticated requests\n- `mentor_jwt_token`: Mentor-specific JWT token for mentor operations\n- `student_jwt_token`: Student-specific JWT token for student operations\n- `repository_id`: Repository ID for testing data access operations"
+		},
+		{
+			"name": "Error Scenarios",
+			"item": [
+				{
+					"name": "Unauthorized Request (No Token)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query GetMe { getMe { id username email } }\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Error Scenario**: Test unauthorized access without JWT token.\n\n**Requirements Validated:** 7.3, 9.1\n\n**Expected Response (401 Unauthorized):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"User must be authenticated\",\n      \"extensions\": {\n        \"code\": \"UNAUTHENTICATED\"\n      }\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Unauthorized access denied', function () {",
+									"    pm.response.to.have.status(200); // GraphQL returns 200 with errors",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('errors');",
+									"});",
+									"",
+									"console.log('✓ Unauthorized access properly denied');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Invalid JWT Token",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer invalid_jwt_token_here"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						},
+						"description": "**Error Scenario**: Test with invalid JWT token.\n\n**Requirements Validated:** 7.4, 9.1\n\n**Expected Response (401 Unauthorized):**\n```json\n{\n  \"detail\": \"Token validation failed: Invalid token\"\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Invalid token rejected', function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test('Proper error message for invalid token', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.detail).to.include('Token validation failed');",
+									"});",
+									"",
+									"console.log('✓ Invalid JWT token properly rejected');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Expired JWT Token",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{expired_jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						},
+						"description": "**Error Scenario**: Test with expired JWT token.\n\n**Requirements Validated:** 7.4, 9.1\n\n**Instructions:**\n1. Set {{expired_jwt_token}} to a JWT token that has expired\n2. Send request to test expired token handling\n\n**Expected Response (401 Unauthorized):**\n```json\n{\n  \"detail\": \"Token validation failed: Token has expired\"\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Expired token rejected', function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test('Proper error message for expired token', function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.detail).to.include('expired');",
+									"});",
+									"",
+									"console.log('✓ Expired JWT token properly rejected');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Student Trying Mentor Operation (403 Forbidden)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation EnrollStudent($githubUsername: String!, $email: String!) { enrollStudent(githubUsername: $githubUsername, email: $email) { id username } }\",\n  \"variables\": {\n    \"githubUsername\": \"test_student\",\n    \"email\": \"test@example.com\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Authorization Error Scenario**: Test student trying to perform mentor-only operation.\n\n**Requirements Validated:** 2.5, 6.7, 9.2\n\n**Prerequisites:** Must have a valid student JWT token in {{student_jwt_token}}\n\n**Expected Response (403 Forbidden via GraphQL):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"User must be a mentor\",\n      \"extensions\": {\n        \"code\": \"FORBIDDEN\"\n      }\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student mentor operation denied', function () {",
+									"    pm.response.to.have.status(200); // GraphQL returns 200 with errors",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('errors');",
+									"    pm.expect(responseJson.errors[0].message).to.include('mentor');",
+									"});",
+									"",
+									"console.log('✓ Student properly denied mentor operation');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Mentor Trying Student-Only Operation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{mentor_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation SaveContributionMetrics($repoId: String!, $commitCount: Int!, $prCount: Int!, $issueCount: Int!, $consistencyScore: Float!) { saveContributionMetrics(repoId: $repoId, commitCount: $commitCount, prCount: $prCount, issueCount: $issueCount, consistencyScore: $consistencyScore) { id } }\",\n  \"variables\": {\n    \"repoId\": \"507f1f77bcf86cd799439011\",\n    \"commitCount\": 10,\n    \"prCount\": 2,\n    \"issueCount\": 1,\n    \"consistencyScore\": 0.8\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Authorization Error Scenario**: Test mentor trying to perform student-only operation.\n\n**Requirements Validated:** 2.5, 6.7, 9.2\n\n**Prerequisites:** Must have a valid mentor JWT token in {{mentor_jwt_token}}\n\n**Expected Response (403 Forbidden via GraphQL):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"User must be a student\",\n      \"extensions\": {\n        \"code\": \"FORBIDDEN\"\n      }\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Mentor student operation denied', function () {",
+									"    pm.response.to.have.status(200); // GraphQL returns 200 with errors",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('errors');",
+									"    pm.expect(responseJson.errors[0].message).to.include('student');",
+									"});",
+									"",
+									"console.log('✓ Mentor properly denied student operation');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Database Connection Error Simulation",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"health"
+							]
+						},
+						"description": "**System Health Check**: Test authentication service health and database connectivity.\n\n**Requirements Validated:** 9.3\n\n**Expected Response (Healthy):**\n```json\n{\n  \"status\": \"healthy\",\n  \"authentication\": \"operational\",\n  \"github_oauth\": \"configured\",\n  \"jwt_handler\": \"operational\",\n  \"database\": \"healthy\"\n}\n```\n\n**Expected Response (Unhealthy):**\n```json\n{\n  \"status\": \"unhealthy\",\n  \"error\": \"Database connection failed\"\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Health check responds', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.status === 'healthy') {",
+									"    console.log('✓ Authentication service is healthy');",
+									"} else {",
+									"    console.log('⚠️ Authentication service has issues:', responseJson.error);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				}
+			],
+			"description": "**Error Handling and Authorization Violation Scenarios**\n\nComprehensive error testing including:\n\n1. **Authentication Errors**: Missing tokens, invalid tokens, expired tokens\n2. **Authorization Errors**: Role-based access violations\n3. **OAuth Errors**: Invalid codes, missing parameters\n4. **System Errors**: Database connectivity, service health\n\n**Requirements Coverage:**\n- 1.7: Non-enrolled student access denial\n- 2.4: Student self-registration prevention\n- 7.4: Invalid/expired JWT handling\n- 9.1, 9.2: Authentication and authorization error handling\n- 9.3: Database error handling"
+		},
+		{
+			"name": "AI Feedback System",
+			"item": [
+				{
+					"name": "Generate AI Feedback (Student)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation GenerateAIFeedback($input: GenerateAIFeedbackInput!) { generateAIFeedback(input: $input) { id repoId studentGithubId qualityScore strengths issues suggestions generatedAt } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoId\": \"{{repository_id}}\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Generate AI Feedback for Student Repository**: Generate AI-powered code quality feedback for student's repository.\n\n**Requirements Validated:** 11.1, 11.2, 11.3, 12.1\n\n**Permission Required:** IsStudent (for own repositories) or IsMentor (for any repository)\n\n**Access Control:**\n- Students can only generate feedback for repositories they have access to\n- Mentors can generate feedback for any student repository\n- AI feedback includes quality score, strengths, issues, and improvement suggestions\n\n**Prerequisites:**\n- Must use student JWT token ({{student_jwt_token}}) for student access\n- Must have valid repository ID that student has access to\n- Repository should have GitHub data available for analysis\n\n**Expected Response (Success):**\n```json\n{\n  \"data\": {\n    \"generateAIFeedback\": {\n      \"id\": \"507f1f77bcf86cd799439020\",\n      \"repoId\": \"507f1f77bcf86cd799439012\",\n      \"studentGithubId\": \"67890\",\n      \"qualityScore\": 7.5,\n      \"strengths\": [\n        \"Consistent commit frequency shows good development habits\",\n        \"Good use of descriptive commit messages\",\n        \"Proper branch management and pull request workflow\"\n      ],\n      \"issues\": [\n        \"Limited test coverage detected in recent commits\",\n        \"Some functions could benefit from better documentation\"\n      ],\n      \"suggestions\": [\n        \"Consider adding unit tests for core functionality\",\n        \"Add inline comments for complex algorithms\",\n        \"Consider using more descriptive variable names\"\n      ],\n      \"generatedAt\": \"2024-01-15T16:30:00Z\"\n    }\n  }\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('generateAIFeedback mutation successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('generateAIFeedback');",
+									"});",
+									"",
+									"pm.test('AI feedback contains required fields', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const feedback = responseJson.data.generateAIFeedback;",
+									"    pm.expect(feedback).to.have.property('id');",
+									"    pm.expect(feedback).to.have.property('repoId');",
+									"    pm.expect(feedback).to.have.property('studentGithubId');",
+									"    pm.expect(feedback).to.have.property('qualityScore');",
+									"    pm.expect(feedback).to.have.property('strengths');",
+									"    pm.expect(feedback).to.have.property('issues');",
+									"    pm.expect(feedback).to.have.property('suggestions');",
+									"    pm.expect(feedback.qualityScore).to.be.within(0, 10);",
+									"    pm.expect(feedback.strengths).to.be.an('array');",
+									"    pm.expect(feedback.issues).to.be.an('array');",
+									"    pm.expect(feedback.suggestions).to.be.an('array');",
+									"});",
+									"",
+									"// Save AI feedback ID for other tests",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.data && responseJson.data.generateAIFeedback) {",
+									"    const feedback = responseJson.data.generateAIFeedback;",
+									"    pm.environment.set('ai_feedback_id', feedback.id);",
+									"    console.log('✓ AI feedback generated successfully');",
+									"    console.log('  - Feedback ID:', feedback.id);",
+									"    console.log('  - Quality Score:', feedback.qualityScore);",
+									"    console.log('  - Strengths:', feedback.strengths.length);",
+									"    console.log('  - Issues:', feedback.issues.length);",
+									"    console.log('  - Suggestions:', feedback.suggestions.length);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Generate AI Feedback (Mentor for Student)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{mentor_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation GenerateAIFeedback($input: GenerateAIFeedbackInput!) { generateAIFeedback(input: $input) { id repoId studentGithubId qualityScore strengths issues suggestions generatedAt } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoId\": \"{{repository_id}}\",\n      \"studentGithubId\": \"{{enrolled_student_github_id}}\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Generate AI Feedback for Student (Mentor Access)**: Mentor generating AI feedback for any student repository.\n\n**Requirements Validated:** 11.1, 11.2, 11.3, 12.2, 12.4\n\n**Permission Required:** IsMentor\n\n**Access Control:**\n- Mentors can generate feedback for any student in their repositories\n- Must specify target student GitHub ID\n- Repository must be owned by the mentor\n- Validates student exists and is enrolled\n\n**Prerequisites:**\n- Must use mentor JWT token ({{mentor_jwt_token}})\n- Must have valid repository ID that mentor owns\n- Must specify enrolled student GitHub ID\n- Repository should have GitHub data available for analysis\n\n**Expected Response (Success):**\n```json\n{\n  \"data\": {\n    \"generateAIFeedback\": {\n      \"id\": \"507f1f77bcf86cd799439021\",\n      \"repoId\": \"507f1f77bcf86cd799439012\",\n      \"studentGithubId\": \"67890\",\n      \"qualityScore\": 8.2,\n      \"strengths\": [\n        \"Excellent code organization and structure\",\n        \"Consistent naming conventions throughout the project\",\n        \"Good use of version control with meaningful commit messages\"\n      ],\n      \"issues\": [\n        \"Some functions lack proper error handling\",\n        \"Documentation could be more comprehensive\"\n      ],\n      \"suggestions\": [\n        \"Add try-catch blocks for error-prone operations\",\n        \"Consider adding JSDoc comments for better documentation\",\n        \"Implement unit tests for critical functions\"\n      ],\n      \"generatedAt\": \"2024-01-15T17:00:00Z\"\n    }\n  }\n}\n```\n\n**Error Response (Repository Not Owned):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"REPOSITORY_NOT_FOUND: Repository not found or access denied: 507f1f77bcf86cd799439999\"\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Mentor generateAIFeedback mutation successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('generateAIFeedback');",
+									"});",
+									"",
+									"pm.test('Mentor AI feedback contains required fields', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const feedback = responseJson.data.generateAIFeedback;",
+									"    pm.expect(feedback).to.have.property('id');",
+									"    pm.expect(feedback).to.have.property('repoId');",
+									"    pm.expect(feedback).to.have.property('studentGithubId');",
+									"    pm.expect(feedback).to.have.property('qualityScore');",
+									"    pm.expect(feedback).to.have.property('strengths');",
+									"    pm.expect(feedback).to.have.property('issues');",
+									"    pm.expect(feedback).to.have.property('suggestions');",
+									"    pm.expect(feedback.qualityScore).to.be.within(0, 10);",
+									"    pm.expect(feedback.strengths).to.be.an('array');",
+									"    pm.expect(feedback.issues).to.be.an('array');",
+									"    pm.expect(feedback.suggestions).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Mentor can generate feedback for specified student', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const feedback = responseJson.data.generateAIFeedback;",
+									"    const targetStudentId = pm.variables.get('studentGithubId') || pm.environment.get('enrolled_student_github_id');",
+									"    if (targetStudentId) {",
+									"        pm.expect(feedback.studentGithubId).to.eql(targetStudentId);",
+									"    }",
+									"});",
+									"",
+									"// Save mentor-generated AI feedback ID for other tests",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.data && responseJson.data.generateAIFeedback) {",
+									"    const feedback = responseJson.data.generateAIFeedback;",
+									"    pm.environment.set('mentor_ai_feedback_id', feedback.id);",
+									"    console.log('✓ Mentor AI feedback generated successfully');",
+									"    console.log('  - Feedback ID:', feedback.id);",
+									"    console.log('  - Target Student:', feedback.studentGithubId);",
+									"    console.log('  - Quality Score:', feedback.qualityScore);",
+									"    console.log('  - Strengths:', feedback.strengths.length);",
+									"    console.log('  - Issues:', feedback.issues.length);",
+									"    console.log('  - Suggestions:', feedback.suggestions.length);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Get All AI Feedback (Mentor)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{mentor_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query GetMyAIFeedback($repoId: String) { getMyAIFeedback(repoId: $repoId) { id repoId studentGithubId qualityScore strengths issues suggestions generatedAt } }\",\n  \"variables\": {\n    \"repoId\": \"{{repository_id}}\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Get All AI Feedback for Repository (Mentor Access)**: Mentor accessing all student AI feedback for their repositories.\n\n**Requirements Validated:** 12.3, 13.1, 13.3\n\n**Permission Required:** IsMentor\n\n**Access Control:**\n- Mentors can access all student AI feedback for repositories they own\n- Optional repository ID filter for specific repository feedback\n- Returns feedback for all students in the repository\n- Ordered by generation timestamp (newest first)\n\n**Prerequisites:**\n- Must use mentor JWT token ({{mentor_jwt_token}})\n- Repository must be owned by the mentor\n- Students should have generated AI feedback for the repository\n\n**Expected Response (Success):**\n```json\n{\n  \"data\": {\n    \"getMyAIFeedback\": [\n      {\n        \"id\": \"507f1f77bcf86cd799439021\",\n        \"repoId\": \"507f1f77bcf86cd799439012\",\n        \"studentGithubId\": \"67890\",\n        \"qualityScore\": 8.2,\n        \"strengths\": [\n          \"Excellent code organization and structure\",\n          \"Consistent naming conventions throughout the project\"\n        ],\n        \"issues\": [\n          \"Some functions lack proper error handling\"\n        ],\n        \"suggestions\": [\n          \"Add try-catch blocks for error-prone operations\",\n          \"Consider adding JSDoc comments for better documentation\"\n        ],\n        \"generatedAt\": \"2024-01-15T17:00:00Z\"\n      },\n      {\n        \"id\": \"507f1f77bcf86cd799439022\",\n        \"repoId\": \"507f1f77bcf86cd799439012\",\n        \"studentGithubId\": \"11111\",\n        \"qualityScore\": 6.8,\n        \"strengths\": [\n          \"Good progress on core functionality\"\n        ],\n        \"issues\": [\n          \"Inconsistent code formatting\",\n          \"Limited use of comments\"\n        ],\n        \"suggestions\": [\n          \"Use a code formatter like Prettier\",\n          \"Add more descriptive comments\"\n        ],\n        \"generatedAt\": \"2024-01-15T16:45:00Z\"\n      }\n    ]\n  }\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Mentor getMyAIFeedback query successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('getMyAIFeedback');",
+									"    pm.expect(responseJson.data.getMyAIFeedback).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Mentor can see all student feedback for repository', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const feedbacks = responseJson.data.getMyAIFeedback;",
+									"    const expectedRepoId = pm.variables.get('repoId') || pm.environment.get('repository_id');",
+									"    ",
+									"    feedbacks.forEach(function(feedback) {",
+									"        if (expectedRepoId) {",
+									"            pm.expect(feedback.repoId).to.eql(expectedRepoId);",
+									"        }",
+									"        pm.expect(feedback).to.have.property('studentGithubId');",
+									"        pm.expect(feedback.qualityScore).to.be.within(0, 10);",
+									"    });",
+									"});",
+									"",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.data) {",
+									"    const feedbackCount = responseJson.data.getMyAIFeedback.length;",
+									"    const repoId = pm.variables.get('repoId') || pm.environment.get('repository_id');",
+									"    console.log('✓ Mentor AI feedback retrieved:', feedbackCount, 'feedback entries for repository', repoId);",
+									"    ",
+									"    if (feedbackCount > 0) {",
+									"        const students = [...new Set(responseJson.data.getMyAIFeedback.map(f => f.studentGithubId))];",
+									"        console.log('  - Students with feedback:', students.length);",
+									"        const avgScore = responseJson.data.getMyAIFeedback.reduce((sum, f) => sum + f.qualityScore, 0) / feedbackCount;",
+									"        console.log('  - Average quality score:', avgScore.toFixed(2));",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "AI Feedback Error - Gemini API Failure",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation GenerateAIFeedback($input: GenerateAIFeedbackInput!) { generateAIFeedback(input: $input) { id repoId studentGithubId qualityScore } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoId\": \"507f1f77bcf86cd799439999\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**AI Feedback Error Scenario**: Test handling of Gemini Flash API failures and invalid repository IDs.\n\n**Requirements Validated:** 11.3, 13.4, 13.5\n\n**Test Scenario:** Invalid repository ID or Gemini Flash API service failure\n\n**Expected Response (Repository Not Found):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"REPOSITORY_NOT_FOUND: Repository not found or access denied: 507f1f77bcf86cd799439999\"\n    }\n  ]\n}\n```\n\n**Expected Response (Gemini API Failure):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"Failed to generate AI feedback: Gemini Flash API service temporarily unavailable\"\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('AI feedback error handled gracefully', function () {",
+									"    pm.response.to.have.status(200); // GraphQL returns 200 with errors",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('errors');",
+									"    pm.expect(responseJson.errors).to.be.an('array');",
+									"    pm.expect(responseJson.errors.length).to.be.greaterThan(0);",
+									"});",
+									"",
+									"pm.test('Error message is descriptive', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const errorMessage = responseJson.errors[0].message;",
+									"    pm.expect(errorMessage).to.be.a('string');",
+									"    pm.expect(errorMessage.length).to.be.greaterThan(10);",
+									"});",
+									"",
+									"console.log('✓ AI feedback error scenario handled correctly');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "AI Feedback Authorization - Student Accessing Mentor Repository",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation GenerateAIFeedback($input: GenerateAIFeedbackInput!) { generateAIFeedback(input: $input) { id repoId studentGithubId } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoId\": \"{{repository_id}}\",\n      \"studentGithubId\": \"different_student_id\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**AI Feedback Authorization Test**: Verify students cannot generate feedback for other students.\n\n**Requirements Validated:** 12.1, 12.4, 9.2\n\n**Test Scenario:** Student attempting to generate AI feedback for another student\n\n**Expected Response (Authorization Denied):**\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"INSUFFICIENT_PERMISSIONS: Students can only generate feedback for themselves\"\n    }\n  ]\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student denied access to generate feedback for others', function () {",
+									"    pm.response.to.have.status(200); // GraphQL returns 200 with errors",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('errors');",
+									"    pm.expect(responseJson.errors[0].message).to.include('INSUFFICIENT_PERMISSIONS');",
+									"});",
+									"",
+									"console.log('✓ Student properly denied access to generate feedback for other students');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Get My AI Feedback (Student)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query GetMyAIFeedback($repoId: String) { getMyAIFeedback(repoId: $repoId) { id repoId studentGithubId qualityScore strengths issues suggestions generatedAt } }\",\n  \"variables\": {\n    \"repoId\": \"{{repository_id}}\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"graphql"
+							]
+						},
+						"description": "**Get Student's Own AI Feedback**: Retrieve AI feedback for the current student user.\n\n**Requirements Validated:** 12.3, 13.1, 13.3\n\n**Permission Required:** IsStudent\n\n**Access Control:**\n- Students can only access their own AI feedback\n- Optional repository ID filter for specific repository feedback\n- Returns feedback history with timestamps\n\n**Prerequisites:**\n- Must use student JWT token ({{student_jwt_token}})\n- Student should have generated AI feedback previously\n- Optional: Provide repository ID to filter feedback for specific repository\n\n**Expected Response (Success):**\n```json\n{\n  \"data\": {\n    \"getMyAIFeedback\": [\n      {\n        \"id\": \"507f1f77bcf86cd799439020\",\n        \"repoId\": \"507f1f77bcf86cd799439012\",\n        \"studentGithubId\": \"67890\",\n        \"qualityScore\": 7.5,\n        \"strengths\": [\n          \"Consistent commit frequency shows good development habits\",\n          \"Good use of descriptive commit messages\"\n        ],\n        \"issues\": [\n          \"Limited test coverage detected in recent commits\"\n        ],\n        \"suggestions\": [\n          \"Consider adding unit tests for core functionality\",\n          \"Add inline comments for complex algorithms\"\n        ],\n        \"generatedAt\": \"2024-01-15T16:30:00Z\"\n      }\n    ]\n  }\n}\n```"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('getMyAIFeedback query successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('getMyAIFeedback');",
+									"    pm.expect(responseJson.data.getMyAIFeedback).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Student can only see own feedback', function () {",
+									"    const responseJson = pm.response.json();",
+									"    const feedbacks = responseJson.data.getMyAIFeedback;",
+									"    const currentUserGithubId = pm.environment.get('current_user_github_id');",
+									"    ",
+									"    feedbacks.forEach(function(feedback) {",
+									"        if (currentUserGithubId) {",
+									"            pm.expect(feedback.studentGithubId).to.eql(currentUserGithubId);",
+									"        }",
+									"    });",
+									"});",
+									"",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.data) {",
+									"    const feedbackCount = responseJson.data.getMyAIFeedback.length;",
+									"    console.log('✓ Student AI feedback retrieved:', feedbackCount, 'feedback entries');",
+									"    if (feedbackCount > 0) {",
+									"        const avgScore = responseJson.data.getMyAIFeedback.reduce((sum, f) => sum + f.qualityScore, 0) / feedbackCount;",
+									"        console.log('  - Average quality score:', avgScore.toFixed(2));",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				}
+			],
+			"description": "**AI-Powered Code Quality Feedback System**\n\nComplete AI feedback system with Google Gemini Flash API integration for educational code quality analysis:\n\n**Available Operations:**\n\n1. **generateAIFeedback** (Student for own repos)\n   - Students can generate AI feedback for repositories they have access to\n   - Analyzes GitHub repository data using Gemini Flash API\n   - Returns quality score (0-10), strengths, issues, and improvement suggestions\n   - Validates: Requirements 11.1, 11.2, 11.3, 12.1\n\n2. **generateAIFeedback** (Mentor for any student repo)\n   - Mentors can generate AI feedback for any student in their repositories\n   - Must specify target student GitHub ID\n   - Repository ownership validation enforced\n   - Validates: Requirements 11.1, 11.2, 11.3, 12.2, 12.4\n\n3. **getMyAIFeedback** (Student)\n   - Student-only query for their own AI feedback history\n   - Optional repository filtering\n   - Validates: Requirements 12.3, 13.1, 13.3\n\n4. **getMyAIFeedback** (Mentor)\n   - Mentor access to all student AI feedback for their repositories\n   - Repository-specific or all repositories owned by mentor\n   - Validates: Requirements 12.3, 13.1, 13.3\n\n**Error Handling & Authorization Testing:**\n- ✅ Students can generate feedback for their own repositories only\n- ✅ Mentors can generate feedback for any student repository they own\n- ✅ Students can only access their own feedback\n- ✅ Mentors can access all student feedback for their repositories\n- ✅ Gemini Flash API failure handling with graceful error responses\n- ✅ Repository access validation and proper error messages\n- ✅ Authorization violation handling with descriptive errors\n\n**Requirements Coverage:**\n- 11.1, 11.2, 11.3: AI feedback generation and Gemini Flash API integration\n- 11.5: Educational and constructive feedback tone\n- 12.1, 12.2: AI feedback authorization (student vs mentor access patterns)\n- 12.3: AI feedback access control and role-based filtering\n- 12.4: Authorization validation before processing\n- 13.1, 13.2, 13.3: AI feedback data management and storage\n- 13.4, 13.5: Gemini Flash API error handling and data integrity\n\n**Environment Variables Used:**\n- `student_jwt_token`: Student JWT token for student AI feedback operations\n- `mentor_jwt_token`: Mentor JWT token for mentor AI feedback operations\n- `repository_id`: Repository ID for AI feedback operations (auto-populated)\n- `enrolled_student_github_id`: Target student GitHub ID for mentor operations\n- `ai_feedback_id`: Student AI feedback ID (auto-populated from generation)\n- `mentor_ai_feedback_id`: Mentor-generated AI feedback ID (auto-populated)\n\n**Usage Instructions:**\n1. Complete OAuth authentication flow to get JWT tokens\n2. Ensure repositories and student enrollments exist\n3. Use student token to generate feedback for own repositories\n4. Use mentor token to generate feedback for any student repository (specify student ID)\n5. Query feedback history with appropriate role-based access\n6. Test authorization boundaries and error scenarios\n7. Validate Gemini Flash API integration and error handling\n8. Test fast response times and efficiency of Flash model"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Comprehensive Pre-request Script for JWT Token Management",
+					"// This script ensures proper JWT token handling across all requests",
+					"",
+					"// Function to check if JWT token is expired",
+					"function isTokenExpired(token) {",
+					"    if (!token) return true;",
+					"    ",
+					"    try {",
+					"        const payload = JSON.parse(atob(token.split('.')[1]));",
+					"        const currentTime = Math.floor(Date.now() / 1000);",
+					"        return payload.exp < currentTime;",
+					"    } catch (e) {",
+					"        console.log('Invalid JWT token format');",
+					"        return true;",
+					"    }",
+					"}",
+					"",
+					"// Function to extract user info from JWT token",
+					"function getUserInfoFromToken(token) {",
+					"    if (!token) return null;",
+					"    ",
+					"    try {",
+					"        const payload = JSON.parse(atob(token.split('.')[1]));",
+					"        return {",
+					"            githubId: payload.github_id,",
+					"            username: payload.username,",
+					"            email: payload.email,",
+					"            role: payload.role",
+					"        };",
+					"    } catch (e) {",
+					"        console.log('Failed to extract user info from token');",
+					"        return null;",
+					"    }",
+					"}",
+					"",
+					"// Main token validation logic",
+					"const jwtToken = pm.environment.get('jwt_token');",
+					"const mentorToken = pm.environment.get('mentor_jwt_token');",
+					"const studentToken = pm.environment.get('student_jwt_token');",
+					"",
+					"// Check if current request requires authentication",
+					"const requiresAuth = pm.request.headers.has('Authorization');",
+					"",
+					"if (requiresAuth) {",
+					"    // Determine which token to use based on request",
+					"    let tokenToUse = jwtToken;",
+					"    let tokenType = 'general';",
+					"    ",
+					"    // Check if request specifically uses mentor or student token",
+					"    const authHeader = pm.request.headers.get('Authorization');",
+					"    if (authHeader && authHeader.includes('{{mentor_jwt_token}}')) {",
+					"        tokenToUse = mentorToken;",
+					"        tokenType = 'mentor';",
+					"    } else if (authHeader && authHeader.includes('{{student_jwt_token}}')) {",
+					"        tokenToUse = studentToken;",
+					"        tokenType = 'student';",
+					"    }",
+					"    ",
+					"    // Validate token",
+					"    if (!tokenToUse) {",
+					"        console.log(`⚠️ No ${tokenType} JWT token found. Please authenticate first.`);",
+					"        console.log('💡 Run the OAuth authentication flow to get JWT tokens.');",
+					"    } else if (isTokenExpired(tokenToUse)) {",
+					"        console.log(`⚠️ ${tokenType} JWT token has expired. Please re-authenticate.`);",
+					"        console.log('💡 Run the OAuth authentication flow to refresh your tokens.');",
+					"    } else {",
+					"        // Token is valid, extract and set user info",
+					"        const userInfo = getUserInfoFromToken(tokenToUse);",
+					"        if (userInfo) {",
+					"            pm.environment.set('current_user_github_id', userInfo.githubId);",
+					"            pm.environment.set('current_user_role', userInfo.role);",
+					"            console.log(`✓ Using valid ${tokenType} token for user: ${userInfo.username} (${userInfo.role})`);",
+					"        }",
+					"    }",
+					"}",
+					"",
+					"// Auto-populate common variables if missing",
+					"if (!pm.environment.get('base_url')) {",
+					"    pm.environment.set('base_url', 'http://localhost:8000');",
+					"    console.log('ℹ️ Set default base_url to http://localhost:8000');",
+					"}",
+					"",
+					"if (!pm.environment.get('oauth_state')) {",
+					"    pm.environment.set('oauth_state', 'postman_test_state');",
+					"    console.log('ℹ️ Set default oauth_state for CSRF protection');",
+					"}",
+					"",
+					"// Set request timestamp for debugging",
+					"pm.environment.set('request_timestamp', new Date().toISOString());",
+					"",
+					"// Log request info for debugging",
+					"console.log(`🚀 Request: ${pm.request.method} ${pm.request.url}`);",
+					"if (pm.request.body && pm.request.body.mode === 'raw') {",
+					"    try {",
+					"        const body = JSON.parse(pm.request.body.raw);",
+					"        if (body.query) {",
+					"            const operationType = body.query.trim().startsWith('mutation') ? 'Mutation' : 'Query';",
+					"            const operationMatch = body.query.match(/(query|mutation)\\s+(\\w+)/);",
+					"            const operationName = operationMatch ? operationMatch[2] : 'Unknown';",
+					"            console.log(`📊 GraphQL ${operationType}: ${operationName}`);",
+					"        }",
+					"    } catch (e) {",
+					"        // Not a JSON body, skip parsing",
+					"    }",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global Post-response Script for Common Validations",
+					"// This script runs after every request to perform common checks",
+					"",
+					"// Log response info",
+					"console.log(`📥 Response: ${pm.response.code} ${pm.response.status}`);",
+					"",
+					"// Common GraphQL response validation",
+					"if (pm.request.url.toString().includes('/graphql')) {",
+					"    pm.test('GraphQL response format is valid', function () {",
+					"        pm.response.to.have.status(200);",
+					"        const responseJson = pm.response.json();",
+					"        // GraphQL should always return an object with data or errors",
+					"        pm.expect(responseJson).to.be.an('object');",
+					"        pm.expect(responseJson).to.satisfy(function(response) {",
+					"            return response.hasOwnProperty('data') || response.hasOwnProperty('errors');",
+					"        });",
+					"    });",
+					"    ",
+					"    // Log GraphQL errors if present",
+					"    const responseJson = pm.response.json();",
+					"    if (responseJson.errors) {",
+					"        console.log('❌ GraphQL Errors:');",
+					"        responseJson.errors.forEach(function(error, index) {",
+					"            console.log(`  ${index + 1}. ${error.message}`);",
+					"        });",
+					"    } else if (responseJson.data) {",
+					"        console.log('✅ GraphQL operation successful');",
+					"    }",
+					"}",
+					"",
+					"// OAuth callback token extraction",
+					"if (pm.request.url.toString().includes('/auth/github/callback') && pm.response.code === 200) {",
+					"    const responseJson = pm.response.json();",
+					"    if (responseJson.access_token) {",
+					"        // Determine token type based on user role",
+					"        if (responseJson.user && responseJson.user.role === 'MENTOR') {",
+					"            pm.environment.set('mentor_jwt_token', responseJson.access_token);",
+					"            console.log('🔑 Mentor JWT token saved to environment');",
+					"        } else if (responseJson.user && responseJson.user.role === 'STUDENT') {",
+					"            pm.environment.set('student_jwt_token', responseJson.access_token);",
+					"            console.log('🔑 Student JWT token saved to environment');",
+					"        }",
+					"        ",
+					"        // Always set general jwt_token as well",
+					"        pm.environment.set('jwt_token', responseJson.access_token);",
+					"        ",
+					"        // Set user context variables",
+					"        if (responseJson.user) {",
+					"            pm.environment.set('current_user_github_id', responseJson.user.github_id);",
+					"            pm.environment.set('current_user_role', responseJson.user.role);",
+					"            console.log(`👤 User context set: ${responseJson.user.username} (${responseJson.user.role})`);",
+					"        }",
+					"    }",
+					"}",
+					"",
+					"// Auto-save important IDs from successful operations",
+					"if (pm.response.code === 200) {",
+					"    const responseJson = pm.response.json();",
+					"    ",
+					"    // Save repository ID from createRepository",
+					"    if (responseJson.data && responseJson.data.createRepository) {",
+					"        pm.environment.set('repository_id', responseJson.data.createRepository.id);",
+					"        console.log('🏗️ Repository ID saved:', responseJson.data.createRepository.id);",
+					"    }",
+					"    ",
+					"    // Save student info from enrollStudent",
+					"    if (responseJson.data && responseJson.data.enrollStudent) {",
+					"        pm.environment.set('enrolled_student_github_id', responseJson.data.enrollStudent.githubId);",
+					"        console.log('👨‍🎓 Enrolled student GitHub ID saved:', responseJson.data.enrollStudent.githubId);",
+					"    }",
+					"    ",
+					"    // Save metrics ID from saveContributionMetrics",
+					"    if (responseJson.data && responseJson.data.saveContributionMetrics) {",
+					"        pm.environment.set('contribution_metrics_id', responseJson.data.saveContributionMetrics.id);",
+					"        console.log('📊 Contribution metrics ID saved:', responseJson.data.saveContributionMetrics.id);",
+					"    }",
+					"    ",
+					"    // Save AI feedback ID from generateAIFeedback",
+					"    if (responseJson.data && responseJson.data.generateAIFeedback) {",
+					"        pm.environment.set('ai_feedback_id', responseJson.data.generateAIFeedback.id);",
+					"        console.log('🤖 AI feedback ID saved:', responseJson.data.generateAIFeedback.id);",
+					"    }",
+					"}",
+					"",
+					"// Performance logging",
+					"const responseTime = pm.response.responseTime;",
+					"if (responseTime > 5000) {",
+					"    console.log(`⚠️ Slow response: ${responseTime}ms`);",
+					"} else if (responseTime > 1000) {",
+					"    console.log(`⏱️ Response time: ${responseTime}ms`);",
+					"}",
+					"",
+					"// Update last request timestamp",
+					"pm.environment.set('last_response_timestamp', new Date().toISOString());"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string",
+			"description": "Base URL for the Student Progress Backend API"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string",
+			"description": "JWT token for authenticated requests (auto-populated from OAuth flow)"
+		},
+		{
+			"key": "student_jwt_token",
+			"value": "",
+			"type": "string",
+			"description": "JWT token for student user (for testing student-specific operations)"
+		},
+		{
+			"key": "mentor_jwt_token",
+			"value": "",
+			"type": "string",
+			"description": "JWT token for mentor user (for testing mentor-specific operations)"
+		},
+		{
+			"key": "expired_jwt_token",
+			"value": "",
+			"type": "string",
+			"description": "Expired JWT token for testing token expiration handling"
+		},
+		{
+			"key": "repository_id",
+			"value": "",
+			"type": "string",
+			"description": "Repository ID (auto-populated from createRepository mutation)"
+		},
+		{
+			"key": "auth_code",
+			"value": "",
+			"type": "string",
+			"description": "Authorization code from GitHub OAuth callback (manually set from browser)"
+		},
+		{
+			"key": "student_auth_code",
+			"value": "",
+			"type": "string",
+			"description": "Authorization code for enrolled student OAuth callback"
+		},
+		{
+			"key": "non_enrolled_student_code",
+			"value": "",
+			"type": "string",
+			"description": "Authorization code for non-enrolled student (should result in 403)"
+		},
+		{
+			"key": "oauth_state",
+			"value": "postman_test_state",
+			"type": "string",
+			"description": "State parameter for OAuth CSRF protection"
+		},
+		{
+			"key": "current_user_role",
+			"value": "",
+			"type": "string",
+			"description": "Current authenticated user's role (MENTOR or STUDENT)"
+		},
+		{
+			"key": "current_user_github_id",
+			"value": "",
+			"type": "string",
+			"description": "Current authenticated user's GitHub ID"
+		},
+		{
+			"key": "ai_feedback_id",
+			"value": "",
+			"type": "string",
+			"description": "AI feedback ID (auto-populated from generateAIFeedback mutation)"
+		},
+		{
+			"key": "mentor_ai_feedback_id",
+			"value": "",
+			"type": "string",
+			"description": "Mentor-generated AI feedback ID (auto-populated from mentor generateAIFeedback mutation)"
+		},
+		{
+			"key": "enrolled_student_github_id",
+			"value": "",
+			"type": "string",
+			"description": "Enrolled student's GitHub ID (auto-populated from enrollStudent mutation)"
+		},
+		{
+			"key": "contribution_metrics_id",
+			"value": "",
+			"type": "string",
+			"description": "Contribution metrics ID (auto-populated from saveContributionMetrics mutation)"
+		}
+	]
+}

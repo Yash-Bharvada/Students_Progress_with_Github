@@ -1,0 +1,1135 @@
+{
+  "info": {
+    "name": "Student Progress Backend - Error Handling Examples",
+    "description": "Comprehensive error handling examples for authentication failures, authorization violations, database errors, and GraphQL input validation errors",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication Errors",
+      "description": "Examples of authentication failures with proper status codes",
+      "item": [
+        {
+          "name": "Missing Authorization Header",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Test missing Authorization header - should return 401"
+          },
+          "response": [
+            {
+              "name": "401 Unauthorized - Missing Header",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/auth/me",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "me"]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"AUTHENTICATION_ERROR\",\n  \"message\": \"Authorization header is required\",\n  \"details\": {\n    \"missing_header\": \"Authorization\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Invalid Bearer Token Format",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "InvalidTokenFormat",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Test invalid token format - should return 401"
+          },
+          "response": [
+            {
+              "name": "401 Unauthorized - Invalid Format",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "InvalidTokenFormat"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/me",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "me"]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"AUTHENTICATION_ERROR\",\n  \"message\": \"Bearer token is required\",\n  \"details\": {\n    \"invalid_format\": \"Expected 'Bearer <token>'\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Expired JWT Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJnaXRodWJfaWQiOiIxMjM0NTYiLCJ1c2VybmFtZSI6InRlc3R1c2VyIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZSI6IlNUVURFTlQiLCJpYXQiOjE2MDk0NTkyMDAsImV4cCI6MTYwOTQ2MjgwMH0.expired_signature",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Test expired JWT token - should return 401"
+          },
+          "response": [
+            {
+              "name": "401 Unauthorized - Expired Token",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer expired_token_here"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/me",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "me"]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"JWT_ERROR\",\n  \"message\": \"Token has expired\",\n  \"details\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "Invalid JWT Signature",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJnaXRodWJfaWQiOiIxMjM0NTYiLCJ1c2VybmFtZSI6InRlc3R1c2VyIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZSI6IlNUVURFTlQiLCJpYXQiOjE2MDk0NTkyMDAsImV4cCI6MTYwOTQ2MjgwMH0.invalid_signature",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Test invalid JWT signature - should return 401"
+          },
+          "response": [
+            {
+              "name": "401 Unauthorized - Invalid Signature",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer invalid_signature_token"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/me",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "me"]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"JWT_ERROR\",\n  \"message\": \"Invalid token signature\",\n  \"details\": {}\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Authorization Violations",
+      "description": "Examples of authorization violations with 403 responses and logging",
+      "item": [
+        {
+          "name": "Student Not Enrolled - OAuth Callback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/github/callback?code=test_code_for_non_enrolled_student",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "github", "callback"],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "test_code_for_non_enrolled_student"
+                }
+              ]
+            },
+            "description": "Test non-enrolled student trying to login - should return 403"
+          },
+          "response": [
+            {
+              "name": "403 Forbidden - Student Not Enrolled",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/auth/github/callback?code=test_code",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "github", "callback"],
+                  "query": [
+                    {
+                      "key": "code",
+                      "value": "test_code"
+                    }
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"STUDENT_NOT_ENROLLED\",\n  \"message\": \"Student 'testuser' is not enrolled. Please contact a mentor for enrollment.\",\n  \"details\": {\n    \"github_id\": \"123456\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Student Accessing Mentor-Only GraphQL Mutation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{student_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation EnrollStudent($input: EnrollStudentInput!) { enrollStudent(input: $input) { id username email role } }\",\n  \"variables\": {\n    \"input\": {\n      \"githubUsername\": \"newstudent\",\n      \"email\": \"newstudent@example.com\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            },
+            "description": "Test student trying to enroll another student - should return 403"
+          },
+          "response": [
+            {
+              "name": "403 Forbidden - Insufficient Permissions",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer student_token"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"query\": \"mutation EnrollStudent($input: EnrollStudentInput!) { enrollStudent(input: $input) { id username email role } }\",\n  \"variables\": {\n    \"input\": {\n      \"githubUsername\": \"newstudent\",\n      \"email\": \"newstudent@example.com\"\n    }\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/graphql",
+                  "host": ["{{base_url}}"],
+                  "path": ["graphql"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": null,\n  \"errors\": [\n    {\n      \"message\": \"INSUFFICIENT_PERMISSIONS: Insufficient permissions for 'enroll_student'. Required role: MENTOR\",\n      \"locations\": [\n        {\n          \"line\": 1,\n          \"column\": 1\n        }\n      ],\n      \"path\": [\"enrollStudent\"]\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Mentor Accessing Student-Only GraphQL Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mentor_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query GetMyContributionMetrics { getMyContributionMetrics { id repoId commitCount prCount issueCount consistencyScore } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            },
+            "description": "Test mentor trying to access student-only query - should return 403"
+          },
+          "response": [
+            {
+              "name": "403 Forbidden - Wrong Role",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mentor_token"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"query\": \"query GetMyContributionMetrics { getMyContributionMetrics { id repoId commitCount prCount issueCount consistencyScore } }\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/graphql",
+                  "host": ["{{base_url}}"],
+                  "path": ["graphql"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": null,\n  \"errors\": [\n    {\n      \"message\": \"Student access required. This operation is restricted to students only.\",\n      \"locations\": [\n        {\n          \"line\": 1,\n          \"column\": 1\n        }\n      ],\n      \"path\": [\"getMyContributionMetrics\"]\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Database Errors",
+      "description": "Examples of database errors with graceful handling",
+      "item": [
+        {
+          "name": "Database Connection Failure",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Test database connection failure - should return 503"
+          },
+          "response": [
+            {
+              "name": "503 Service Unavailable - Database Error",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/health",
+                  "host": ["{{base_url}}"],
+                  "path": ["health"]
+                }
+              },
+              "status": "Service Unavailable",
+              "code": 503,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"unhealthy\",\n  \"error\": \"DATABASE_ERROR\",\n  \"message\": \"Database health check failed\",\n  \"details\": {\n    \"operation\": \"health_check\",\n    \"original_error\": \"Connection timeout\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "User Not Found in Database",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{valid_token_for_nonexistent_user}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Test valid JWT token but user not found in database - should return 404"
+          },
+          "response": [
+            {
+              "name": "404 Not Found - User Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer valid_token_for_nonexistent_user"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/me",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "me"]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"USER_NOT_FOUND\",\n  \"message\": \"User not found: github_123456\",\n  \"details\": {\n    \"github_id\": \"github_123456\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Repository Not Found",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{student_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation SaveContributionMetrics($input: SaveContributionMetricsInput!) { saveContributionMetrics(input: $input) { id repoId commitCount } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoId\": \"507f1f77bcf86cd799439011\",\n      \"commitCount\": 10,\n      \"prCount\": 2,\n      \"issueCount\": 1,\n      \"consistencyScore\": 0.8\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            },
+            "description": "Test saving metrics for non-existent repository - should return 404"
+          },
+          "response": [
+            {
+              "name": "404 Not Found - Repository Not Found",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer student_token"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"query\": \"mutation SaveContributionMetrics($input: SaveContributionMetricsInput!) { saveContributionMetrics(input: $input) { id repoId commitCount } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoId\": \"507f1f77bcf86cd799439011\",\n      \"commitCount\": 10,\n      \"prCount\": 2,\n      \"issueCount\": 1,\n      \"consistencyScore\": 0.8\n    }\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/graphql",
+                  "host": ["{{base_url}}"],
+                  "path": ["graphql"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": null,\n  \"errors\": [\n    {\n      \"message\": \"REPOSITORY_NOT_FOUND: Repository not found: 507f1f77bcf86cd799439011\",\n      \"locations\": [\n        {\n          \"line\": 1,\n          \"column\": 1\n        }\n      ],\n      \"path\": [\"saveContributionMetrics\"]\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "GraphQL Input Validation Errors",
+      "description": "Examples of GraphQL input validation errors with detailed field information",
+      "item": [
+        {
+          "name": "Empty Required Fields - Enroll Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mentor_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation EnrollStudent($input: EnrollStudentInput!) { enrollStudent(input: $input) { id username email role } }\",\n  \"variables\": {\n    \"input\": {\n      \"githubUsername\": \"\",\n      \"email\": \"\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            },
+            "description": "Test empty required fields - should return validation error"
+          },
+          "response": [
+            {
+              "name": "400 Bad Request - Empty Fields",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mentor_token"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"query\": \"mutation EnrollStudent($input: EnrollStudentInput!) { enrollStudent(input: $input) { id username email role } }\",\n  \"variables\": {\n    \"input\": {\n      \"githubUsername\": \"\",\n      \"email\": \"\"\n    }\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/graphql",
+                  "host": ["{{base_url}}"],
+                  "path": ["graphql"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": null,\n  \"errors\": [\n    {\n      \"message\": \"INVALID_INPUT: Invalid github_username: GitHub username is required and cannot be empty\",\n      \"locations\": [\n        {\n          \"line\": 1,\n          \"column\": 1\n        }\n      ],\n      \"path\": [\"enrollStudent\"]\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Invalid Email Format",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mentor_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation EnrollStudent($input: EnrollStudentInput!) { enrollStudent(input: $input) { id username email role } }\",\n  \"variables\": {\n    \"input\": {\n      \"githubUsername\": \"validuser\",\n      \"email\": \"invalid-email-format\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            },
+            "description": "Test invalid email format - should return validation error"
+          },
+          "response": [
+            {
+              "name": "400 Bad Request - Invalid Email",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mentor_token"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"query\": \"mutation EnrollStudent($input: EnrollStudentInput!) { enrollStudent(input: $input) { id username email role } }\",\n  \"variables\": {\n    \"input\": {\n      \"githubUsername\": \"validuser\",\n      \"email\": \"invalid-email-format\"\n    }\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/graphql",
+                  "host": ["{{base_url}}"],
+                  "path": ["graphql"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": null,\n  \"errors\": [\n    {\n      \"message\": \"INVALID_INPUT: Invalid email: Invalid email format\",\n      \"locations\": [\n        {\n          \"line\": 1,\n          \"column\": 1\n        }\n      ],\n      \"path\": [\"enrollStudent\"]\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Invalid Repository URL Format",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mentor_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation CreateRepository($input: CreateRepositoryInput!) { createRepository(input: $input) { id repoName repoUrl } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoName\": \"Test Repo\",\n      \"repoUrl\": \"invalid-url-format\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            },
+            "description": "Test invalid repository URL format - should return validation error"
+          },
+          "response": [
+            {
+              "name": "400 Bad Request - Invalid URL",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mentor_token"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"query\": \"mutation CreateRepository($input: CreateRepositoryInput!) { createRepository(input: $input) { id repoName repoUrl } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoName\": \"Test Repo\",\n      \"repoUrl\": \"invalid-url-format\"\n    }\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/graphql",
+                  "host": ["{{base_url}}"],
+                  "path": ["graphql"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": null,\n  \"errors\": [\n    {\n      \"message\": \"INVALID_INPUT: Invalid repo_url: Repository URL must be a valid HTTP/HTTPS URL\",\n      \"locations\": [\n        {\n          \"line\": 1,\n          \"column\": 1\n        }\n      ],\n      \"path\": [\"createRepository\"]\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Invalid Consistency Score Range",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{student_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation SaveContributionMetrics($input: SaveContributionMetricsInput!) { saveContributionMetrics(input: $input) { id repoId commitCount } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoId\": \"507f1f77bcf86cd799439011\",\n      \"commitCount\": 10,\n      \"prCount\": 2,\n      \"issueCount\": 1,\n      \"consistencyScore\": 1.5\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            },
+            "description": "Test invalid consistency score (> 1.0) - should return validation error"
+          },
+          "response": [
+            {
+              "name": "400 Bad Request - Invalid Score Range",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer student_token"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"query\": \"mutation SaveContributionMetrics($input: SaveContributionMetricsInput!) { saveContributionMetrics(input: $input) { id repoId commitCount } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoId\": \"507f1f77bcf86cd799439011\",\n      \"commitCount\": 10,\n      \"prCount\": 2,\n      \"issueCount\": 1,\n      \"consistencyScore\": 1.5\n    }\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/graphql",
+                  "host": ["{{base_url}}"],
+                  "path": ["graphql"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": null,\n  \"errors\": [\n    {\n      \"message\": \"INVALID_INPUT: Invalid consistency_score: Consistency score must be between 0.0 and 1.0\",\n      \"locations\": [\n        {\n          \"line\": 1,\n          \"column\": 1\n        }\n      ],\n      \"path\": [\"saveContributionMetrics\"]\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Negative Metric Values",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{student_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation SaveContributionMetrics($input: SaveContributionMetricsInput!) { saveContributionMetrics(input: $input) { id repoId commitCount } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoId\": \"507f1f77bcf86cd799439011\",\n      \"commitCount\": -5,\n      \"prCount\": 2,\n      \"issueCount\": 1,\n      \"consistencyScore\": 0.8\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            },
+            "description": "Test negative metric values - should return validation error"
+          },
+          "response": [
+            {
+              "name": "400 Bad Request - Negative Values",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer student_token"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"query\": \"mutation SaveContributionMetrics($input: SaveContributionMetricsInput!) { saveContributionMetrics(input: $input) { id repoId commitCount } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoId\": \"507f1f77bcf86cd799439011\",\n      \"commitCount\": -5,\n      \"prCount\": 2,\n      \"issueCount\": 1,\n      \"consistencyScore\": 0.8\n    }\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/graphql",
+                  "host": ["{{base_url}}"],
+                  "path": ["graphql"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": null,\n  \"errors\": [\n    {\n      \"message\": \"INVALID_INPUT: Invalid commit_count: Commit count must be non-negative\",\n      \"locations\": [\n        {\n          \"line\": 1,\n          \"column\": 1\n        }\n      ],\n      \"path\": [\"saveContributionMetrics\"]\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Invalid ObjectId Format",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mentor_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query GetAllContributionMetrics($repoId: String!) { getAllContributionMetrics(repoId: $repoId) { id studentGithubId commitCount } }\",\n  \"variables\": {\n    \"repoId\": \"invalid-objectid-format\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            },
+            "description": "Test invalid ObjectId format - should return validation error"
+          },
+          "response": [
+            {
+              "name": "400 Bad Request - Invalid ObjectId",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mentor_token"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"query\": \"query GetAllContributionMetrics($repoId: String!) { getAllContributionMetrics(repoId: $repoId) { id studentGithubId commitCount } }\",\n  \"variables\": {\n    \"repoId\": \"invalid-objectid-format\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/graphql",
+                  "host": ["{{base_url}}"],
+                  "path": ["graphql"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": null,\n  \"errors\": [\n    {\n      \"message\": \"INVALID_INPUT: Invalid repo_id: Invalid repository ID format: invalid-objectid-format\",\n      \"locations\": [\n        {\n          \"line\": 1,\n          \"column\": 1\n        }\n      ],\n      \"path\": [\"getAllContributionMetrics\"]\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "External Service Errors",
+      "description": "Examples of external service errors (GitHub OAuth failures)",
+      "item": [
+        {
+          "name": "GitHub OAuth Error Response",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/github/callback?error=access_denied&error_description=The+user+denied+the+request",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "github", "callback"],
+              "query": [
+                {
+                  "key": "error",
+                  "value": "access_denied"
+                },
+                {
+                  "key": "error_description",
+                  "value": "The user denied the request"
+                }
+              ]
+            },
+            "description": "Test GitHub OAuth error response - should return 400"
+          },
+          "response": [
+            {
+              "name": "400 Bad Request - OAuth Error",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/auth/github/callback?error=access_denied&error_description=The+user+denied+the+request",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "github", "callback"],
+                  "query": [
+                    {
+                      "key": "error",
+                      "value": "access_denied"
+                    },
+                    {
+                      "key": "error_description",
+                      "value": "The user denied the request"
+                    }
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"VALIDATION_ERROR\",\n  \"message\": \"GitHub OAuth failed: The user denied the request\",\n  \"details\": {\n    \"github_error\": \"access_denied\",\n    \"description\": \"The user denied the request\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Missing Authorization Code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/github/callback",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "github", "callback"]
+            },
+            "description": "Test missing authorization code - should return 400"
+          },
+          "response": [
+            {
+              "name": "400 Bad Request - Missing Code",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/auth/github/callback",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "github", "callback"]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"VALIDATION_ERROR\",\n  \"message\": \"Authorization code is required\",\n  \"details\": {\n    \"missing_parameter\": \"code\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Conflict Errors",
+      "description": "Examples of resource conflict errors (409 Conflict)",
+      "item": [
+        {
+          "name": "Duplicate Repository URL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mentor_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation CreateRepository($input: CreateRepositoryInput!) { createRepository(input: $input) { id repoName repoUrl } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoName\": \"Duplicate Repo\",\n      \"repoUrl\": \"https://github.com/existing/repository\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            },
+            "description": "Test creating repository with existing URL - should return conflict error"
+          },
+          "response": [
+            {
+              "name": "409 Conflict - Duplicate Repository",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mentor_token"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"query\": \"mutation CreateRepository($input: CreateRepositoryInput!) { createRepository(input: $input) { id repoName repoUrl } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoName\": \"Duplicate Repo\",\n      \"repoUrl\": \"https://github.com/existing/repository\"\n    }\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/graphql",
+                  "host": ["{{base_url}}"],
+                  "path": ["graphql"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": null,\n  \"errors\": [\n    {\n      \"message\": \"DUPLICATE_RESOURCE: Repository already exists: https://github.com/existing/repository\",\n      \"locations\": [\n        {\n          \"line\": 1,\n          \"column\": 1\n        }\n      ],\n      \"path\": [\"createRepository\"]\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "description": "Base URL for the Student Progress Backend API"
+    },
+    {
+      "key": "mentor_token",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mentor_token_here",
+      "description": "Valid JWT token for a mentor user"
+    },
+    {
+      "key": "student_token",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.student_token_here",
+      "description": "Valid JWT token for a student user"
+    },
+    {
+      "key": "valid_token_for_nonexistent_user",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.nonexistent_user_token",
+      "description": "Valid JWT token format but for a user that doesn't exist in database"
+    }
+  ]
+}

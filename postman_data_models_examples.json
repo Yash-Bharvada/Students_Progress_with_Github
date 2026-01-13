@@ -1,0 +1,313 @@
+{
+  "info": {
+    "_postman_id": "data-models-examples",
+    "name": "Student Progress Backend - Data Models Examples",
+    "description": "Sample data creation and validation examples for Pydantic models and GraphQL types with ObjectId reference examples",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Data Model Examples",
+      "item": [
+        {
+          "name": "User Model Example",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"_id\": \"507f1f77bcf86cd799439011\",\n  \"githubId\": \"12345\",\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"role\": \"MENTOR\",\n  \"isEnrolled\": true,\n  \"enrolledBy\": null,\n  \"createdAt\": \"2024-01-15T10:30:00Z\",\n  \"updatedAt\": \"2024-01-15T10:30:00Z\",\n  \"lastLogin\": \"2024-01-15T14:20:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/test/validate-user",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "test",
+                "validate-user"
+              ]
+            },
+            "description": "**User Model Validation Example**\n\n**Requirements Validated:** 8.1\n\n**Pydantic Model Fields:**\n- `_id`: MongoDB ObjectId (auto-generated)\n- `githubId`: GitHub user ID (unique, required)\n- `username`: GitHub username (required)\n- `email`: User email address (optional)\n- `role`: User role enum (MENTOR or STUDENT)\n- `isEnrolled`: Boolean enrollment status\n- `enrolledBy`: GitHub ID of enrolling mentor (null for mentors)\n- `createdAt`: Account creation timestamp\n- `updatedAt`: Last update timestamp\n- `lastLogin`: Last login timestamp (optional)\n\n**Sample Data:**\n```json\n{\n  \"_id\": \"507f1f77bcf86cd799439011\",\n  \"githubId\": \"12345\",\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"role\": \"MENTOR\",\n  \"isEnrolled\": true,\n  \"enrolledBy\": null,\n  \"createdAt\": \"2024-01-15T10:30:00Z\"\n}\n```\n\n**Validation Rules:**\n- `githubId` must be unique across all users\n- `role` must be either \"MENTOR\" or \"STUDENT\"\n- `enrolledBy` should be null for mentors\n- `isEnrolled` should be true for mentors by default\n- ObjectId fields must be valid 24-character hex strings"
+          }
+        },
+        {
+          "name": "Student User Model Example",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"_id\": \"507f1f77bcf86cd799439012\",\n  \"githubId\": \"67890\",\n  \"username\": \"student_jane\",\n  \"email\": \"jane@example.com\",\n  \"role\": \"STUDENT\",\n  \"isEnrolled\": true,\n  \"enrolledBy\": \"12345\",\n  \"createdAt\": \"2024-01-15T11:00:00Z\",\n  \"updatedAt\": \"2024-01-15T11:00:00Z\",\n  \"lastLogin\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/test/validate-user",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "test",
+                "validate-user"
+              ]
+            },
+            "description": "**Student User Model Example**\n\n**Requirements Validated:** 8.1\n\n**Student-Specific Fields:**\n- `role`: Must be \"STUDENT\"\n- `isEnrolled`: Must be true for enrolled students\n- `enrolledBy`: GitHub ID of the mentor who enrolled this student\n- `lastLogin`: null until first login\n\n**Sample Student Data:**\n```json\n{\n  \"_id\": \"507f1f77bcf86cd799439012\",\n  \"githubId\": \"67890\",\n  \"username\": \"student_jane\",\n  \"email\": \"jane@example.com\",\n  \"role\": \"STUDENT\",\n  \"isEnrolled\": true,\n  \"enrolledBy\": \"12345\"\n}\n```\n\n**Student Validation Rules:**\n- Students must have `enrolledBy` field set to mentor's GitHub ID\n- Students cannot have `enrolledBy` as null\n- `isEnrolled` must be true for active students"
+          }
+        },
+        {
+          "name": "Repository Model Example",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"_id\": \"507f1f77bcf86cd799439013\",\n  \"repoName\": \"Student Portfolio Project\",\n  \"repoUrl\": \"https://github.com/mentor/student-portfolio\",\n  \"ownerGithubId\": \"12345\",\n  \"linkedStudents\": [\"67890\", \"11111\", \"22222\"],\n  \"createdAt\": \"2024-01-15T12:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/test/validate-repository",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "test",
+                "validate-repository"
+              ]
+            },
+            "description": "**Repository Model Validation Example**\n\n**Requirements Validated:** 8.2\n\n**Pydantic Model Fields:**\n- `_id`: MongoDB ObjectId (auto-generated)\n- `repoName`: Repository name (required)\n- `repoUrl`: Repository URL (required, unique)\n- `ownerGithubId`: Repository owner's GitHub ID (required)\n- `linkedStudents`: Array of student GitHub IDs\n- `createdAt`: Repository creation timestamp\n\n**Sample Repository Data:**\n```json\n{\n  \"_id\": \"507f1f77bcf86cd799439013\",\n  \"repoName\": \"Student Portfolio Project\",\n  \"repoUrl\": \"https://github.com/mentor/student-portfolio\",\n  \"ownerGithubId\": \"12345\",\n  \"linkedStudents\": [\"67890\", \"11111\", \"22222\"],\n  \"createdAt\": \"2024-01-15T12:00:00Z\"\n}\n```\n\n**Validation Rules:**\n- `repoUrl` must be unique across all repositories\n- `ownerGithubId` must reference an existing mentor\n- `linkedStudents` array contains GitHub IDs of enrolled students\n- Repository names should be descriptive and meaningful"
+          }
+        },
+        {
+          "name": "ContributionMetrics Model Example",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"_id\": \"507f1f77bcf86cd799439014\",\n  \"repoId\": \"507f1f77bcf86cd799439013\",\n  \"studentGithubId\": \"67890\",\n  \"commitCount\": 25,\n  \"prCount\": 5,\n  \"issueCount\": 3,\n  \"consistencyScore\": 0.85,\n  \"lastUpdated\": \"2024-01-15T15:30:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/test/validate-contribution-metrics",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "test",
+                "validate-contribution-metrics"
+              ]
+            },
+            "description": "**ContributionMetrics Model Validation Example**\n\n**Requirements Validated:** 8.3\n\n**Pydantic Model Fields:**\n- `_id`: MongoDB ObjectId (auto-generated)\n- `repoId`: Repository ObjectId reference (required)\n- `studentGithubId`: Student's GitHub ID (required)\n- `commitCount`: Number of commits (integer, default 0)\n- `prCount`: Number of pull requests (integer, default 0)\n- `issueCount`: Number of issues (integer, default 0)\n- `consistencyScore`: Consistency score 0.0-1.0 (float, default 0.0)\n- `lastUpdated`: Last update timestamp\n\n**Sample Metrics Data:**\n```json\n{\n  \"_id\": \"507f1f77bcf86cd799439014\",\n  \"repoId\": \"507f1f77bcf86cd799439013\",\n  \"studentGithubId\": \"67890\",\n  \"commitCount\": 25,\n  \"prCount\": 5,\n  \"issueCount\": 3,\n  \"consistencyScore\": 0.85,\n  \"lastUpdated\": \"2024-01-15T15:30:00Z\"\n}\n```\n\n**ObjectId Reference Example:**\n- `repoId` references the Repository document's `_id`\n- This creates a relationship between metrics and repositories\n- MongoDB will use this for efficient queries and joins\n\n**Validation Rules:**\n- `repoId` must be a valid ObjectId referencing an existing repository\n- `studentGithubId` must reference an enrolled student\n- Numeric fields must be non-negative integers\n- `consistencyScore` must be between 0.0 and 1.0"
+          }
+        },
+        {
+          "name": "AIFeedback Model Example",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"_id\": \"507f1f77bcf86cd799439015\",\n  \"repoId\": \"507f1f77bcf86cd799439013\",\n  \"studentGithubId\": \"67890\",\n  \"qualityScore\": 7.5,\n  \"strengths\": [\n    \"Consistent commit messages\",\n    \"Good code organization\",\n    \"Proper use of Git branches\"\n  ],\n  \"issues\": [\n    \"Limited test coverage\",\n    \"Some functions lack documentation\"\n  ],\n  \"suggestions\": [\n    \"Add unit tests for core functions\",\n    \"Include JSDoc comments for public methods\",\n    \"Consider using a linter for code consistency\"\n  ],\n  \"generatedAt\": \"2024-01-15T16:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/test/validate-ai-feedback",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "test",
+                "validate-ai-feedback"
+              ]
+            },
+            "description": "**AIFeedback Model Validation Example**\n\n**Requirements Validated:** 8.4, 13.1, 13.2\n\n**Pydantic Model Fields:**\n- `_id`: MongoDB ObjectId (auto-generated)\n- `repoId`: Repository ObjectId reference (required)\n- `studentGithubId`: Student's GitHub ID (required)\n- `qualityScore`: Code quality score 0.0-10.0 (float, required)\n- `strengths`: Array of identified strengths (strings)\n- `issues`: Array of identified issues (strings)\n- `suggestions`: Array of improvement suggestions (strings)\n- `generatedAt`: Feedback generation timestamp\n\n**Sample AI Feedback Data:**\n```json\n{\n  \"_id\": \"507f1f77bcf86cd799439015\",\n  \"repoId\": \"507f1f77bcf86cd799439013\",\n  \"studentGithubId\": \"67890\",\n  \"qualityScore\": 7.5,\n  \"strengths\": [\n    \"Consistent commit messages\",\n    \"Good code organization\"\n  ],\n  \"issues\": [\n    \"Limited test coverage\"\n  ],\n  \"suggestions\": [\n    \"Add unit tests for core functions\"\n  ],\n  \"generatedAt\": \"2024-01-15T16:00:00Z\"\n}\n```\n\n**ObjectId Reference Examples:**\n- `repoId` references Repository document: `507f1f77bcf86cd799439013`\n- This links AI feedback to specific repositories\n- Enables efficient queries for all feedback on a repository\n\n**Validation Rules:**\n- `repoId` must be a valid ObjectId referencing an existing repository\n- `studentGithubId` must reference an enrolled student\n- `qualityScore` must be between 0.0 and 10.0\n- String arrays can be empty but should not contain null values"
+          }
+        }
+      ],
+      "description": "**Data Model Validation Examples**\n\nComprehensive examples for all Pydantic models with proper field validation and ObjectId handling:\n\n1. **User Model**: Mentor and student user examples with role-specific validation\n2. **Repository Model**: Repository creation with owner and student linking\n3. **ContributionMetrics Model**: Student performance metrics with ObjectId references\n4. **AIFeedback Model**: AI-generated feedback with structured data\n\n**ObjectId Reference Patterns:**\n- User documents use string GitHub IDs as primary identifiers\n- Repository documents use ObjectId for internal references\n- ContributionMetrics and AIFeedback reference repositories via ObjectId\n- This creates efficient relationships for MongoDB queries\n\n**Requirements Coverage:**\n- 8.1: User collection with proper field validation\n- 8.2: Repository collection with unique constraints\n- 8.3: ContributionMetrics collection with ObjectId references\n- 8.4: Proper MongoDB ObjectId types for document references\n\n**Validation Testing:**\nThese examples can be used to test Pydantic model validation by sending POST requests to validation endpoints that parse and validate the JSON data against the model schemas."
+    },
+    {
+      "name": "GraphQL Type Examples",
+      "item": [
+        {
+          "name": "User GraphQL Type Example",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query ExampleUserType { getMe { id githubId username email role isEnrolled enrolledBy createdAt } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "**User GraphQL Type Example**\n\n**Requirements Validated:** 2.1, 6.1\n\n**Strawberry GraphQL Type Definition:**\n```python\n@strawberry.type\nclass User:\n    id: str\n    github_id: str\n    username: str\n    email: Optional[str]\n    role: Role\n    is_enrolled: bool\n    enrolled_by: Optional[str]\n    created_at: datetime\n```\n\n**Expected GraphQL Response:**\n```json\n{\n  \"data\": {\n    \"getMe\": {\n      \"id\": \"507f1f77bcf86cd799439011\",\n      \"githubId\": \"12345\",\n      \"username\": \"john_doe\",\n      \"email\": \"john@example.com\",\n      \"role\": \"MENTOR\",\n      \"isEnrolled\": true,\n      \"enrolledBy\": null,\n      \"createdAt\": \"2024-01-15T10:30:00Z\"\n    }\n  }\n}\n```\n\n**Type Mapping:**\n- Pydantic `PyObjectId` → GraphQL `String`\n- Pydantic `Role` enum → GraphQL `Role` enum\n- Pydantic `Optional[str]` → GraphQL `String` (nullable)\n- Pydantic `datetime` → GraphQL `DateTime`"
+          }
+        },
+        {
+          "name": "Repository GraphQL Type Example",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query ExampleRepositoryType { getRepositories { id repoName repoUrl ownerGithubId linkedStudents createdAt } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "**Repository GraphQL Type Example**\n\n**Requirements Validated:** 6.2\n\n**Strawberry GraphQL Type Definition:**\n```python\n@strawberry.type\nclass Repository:\n    id: str\n    repo_name: str\n    repo_url: str\n    owner_github_id: str\n    linked_students: List[str]\n    created_at: datetime\n```\n\n**Expected GraphQL Response:**\n```json\n{\n  \"data\": {\n    \"getRepositories\": [\n      {\n        \"id\": \"507f1f77bcf86cd799439013\",\n        \"repoName\": \"Student Portfolio Project\",\n        \"repoUrl\": \"https://github.com/mentor/student-portfolio\",\n        \"ownerGithubId\": \"12345\",\n        \"linkedStudents\": [\"67890\", \"11111\", \"22222\"],\n        \"createdAt\": \"2024-01-15T12:00:00Z\"\n      }\n    ]\n  }\n}\n```\n\n**Type Mapping:**\n- Pydantic `PyObjectId` → GraphQL `String`\n- Pydantic `List[str]` → GraphQL `[String!]!`\n- Field names converted from snake_case to camelCase in GraphQL"
+          }
+        },
+        {
+          "name": "ContributionMetrics GraphQL Type Example",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query ExampleMetricsType { getMyContributionMetrics { id repoId studentGithubId commitCount prCount issueCount consistencyScore lastUpdated } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "**ContributionMetrics GraphQL Type Example**\n\n**Requirements Validated:** 6.3\n\n**Strawberry GraphQL Type Definition:**\n```python\n@strawberry.type\nclass ContributionMetrics:\n    id: str\n    repo_id: str\n    student_github_id: str\n    commit_count: int\n    pr_count: int\n    issue_count: int\n    consistency_score: float\n    last_updated: datetime\n```\n\n**Expected GraphQL Response:**\n```json\n{\n  \"data\": {\n    \"getMyContributionMetrics\": [\n      {\n        \"id\": \"507f1f77bcf86cd799439014\",\n        \"repoId\": \"507f1f77bcf86cd799439013\",\n        \"studentGithubId\": \"67890\",\n        \"commitCount\": 25,\n        \"prCount\": 5,\n        \"issueCount\": 3,\n        \"consistencyScore\": 0.85,\n        \"lastUpdated\": \"2024-01-15T15:30:00Z\"\n      }\n    ]\n  }\n}\n```\n\n**Type Mapping:**\n- Pydantic `PyObjectId` → GraphQL `String` (for references)\n- Pydantic `int` → GraphQL `Int`\n- Pydantic `float` → GraphQL `Float`\n- ObjectId references become string IDs in GraphQL"
+          }
+        },
+        {
+          "name": "Role Enum GraphQL Type Example",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query ExampleRoleEnum { __type(name: \\\"Role\\\") { name enumValues { name description } } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "**Role Enum GraphQL Type Example**\n\n**Requirements Validated:** 2.1\n\n**Strawberry GraphQL Enum Definition:**\n```python\n@strawberry.enum\nclass Role(Enum):\n    MENTOR = \"MENTOR\"\n    STUDENT = \"STUDENT\"\n```\n\n**Expected GraphQL Introspection Response:**\n```json\n{\n  \"data\": {\n    \"__type\": {\n      \"name\": \"Role\",\n      \"enumValues\": [\n        {\n          \"name\": \"MENTOR\",\n          \"description\": \"Mentor user role\"\n        },\n        {\n          \"name\": \"STUDENT\",\n          \"description\": \"Student user role\"\n        }\n      ]\n    }\n  }\n}\n```\n\n**Usage in Queries:**\n- Role enum values are used as strings in GraphQL\n- Values: \"MENTOR\" or \"STUDENT\"\n- Used in User type and authorization logic\n- Provides type safety in GraphQL schema"
+          }
+        },
+        {
+          "name": "Input Types Example",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query ExampleInputTypes { __schema { mutationType { fields { name args { name type { name kind ofType { name } } } } } } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "**GraphQL Input Types Example**\n\n**Requirements Validated:** 6.4, 6.5\n\n**Strawberry Input Type Definitions:**\n```python\n@strawberry.input\nclass EnrollStudentInput:\n    github_username: str\n    email: str\n\n@strawberry.input\nclass CreateRepositoryInput:\n    repo_name: str\n    repo_url: str\n\n@strawberry.input\nclass SaveContributionMetricsInput:\n    repo_id: str\n    commit_count: int\n    pr_count: int\n    issue_count: int\n    consistency_score: float\n```\n\n**Usage in Mutations:**\n```graphql\nmutation EnrollStudent($input: EnrollStudentInput!) {\n  enrollStudent(input: $input) {\n    id\n    username\n    role\n  }\n}\n```\n\n**Variables Example:**\n```json\n{\n  \"input\": {\n    \"githubUsername\": \"new_student\",\n    \"email\": \"student@example.com\"\n  }\n}\n```\n\n**Input Type Benefits:**\n- Type safety for mutation arguments\n- Clear API documentation\n- Validation at GraphQL schema level\n- Reusable input structures"
+          }
+        }
+      ],
+      "description": "**GraphQL Type System Examples**\n\nDemonstrates Strawberry GraphQL type definitions and their usage:\n\n1. **Object Types**: User, Repository, ContributionMetrics with proper field mappings\n2. **Enum Types**: Role enum for MENTOR/STUDENT values\n3. **Input Types**: Structured inputs for mutations\n4. **Type Introspection**: Schema exploration and documentation\n\n**Type Mapping Patterns:**\n- Pydantic models → Strawberry types\n- ObjectId → String in GraphQL\n- Python enums → GraphQL enums\n- Optional fields → Nullable GraphQL fields\n\n**Requirements Coverage:**\n- 2.1: Role enum definition\n- 6.1-6.4: GraphQL type definitions for all data models\n- 6.5: Input types for mutations\n\n**Schema Validation:**\nThese examples demonstrate proper GraphQL schema design with type safety, clear field definitions, and proper handling of MongoDB ObjectId references in the GraphQL layer."
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string",
+      "description": "Base URL for the Student Progress Backend API"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string",
+      "description": "JWT token for authenticated requests"
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+	"id": "student-progress-env",
+	"name": "Student Progress Backend Environment",
+	"values": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "mentor_jwt_token",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "student_jwt_token",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "github_code",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "repository_id",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "student_github_username",
+			"value": "teststudent",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "student_email",
+			"value": "student@example.com",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "repo_name",
+			"value": "test-repository",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "repo_url",
+			"value": "https://github.com/mentor/test-repository",
+			"type": "default",
+			"enabled": true
+		}
+	],
+	"_postman_variable_scope": "environment"
+}

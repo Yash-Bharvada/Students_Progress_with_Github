@@ -1,0 +1,521 @@
+{
+	"info": {
+		"_postman_id": "student-progress-final",
+		"name": "Student Progress Backend - Final Collection",
+		"description": "Complete Postman collection for the Student Progress Backend API with OAuth, GraphQL, and AI feedback functionality",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "GitHub OAuth Login",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/github/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "github", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GitHub OAuth Callback",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/github/callback?code={{github_code}}",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "github", "callback"],
+							"query": [
+								{
+									"key": "code",
+									"value": "{{github_code}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current User",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "me"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+		,
+		{
+			"name": "GraphQL Queries",
+			"item": [
+				{
+					"name": "Get Me",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query { getMe { id githubId username email role isEnrolled createdAt } }\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": ["{{base_url}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Repositories",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query { getRepositories { id repoName repoUrl ownerGithubId linkedStudents createdAt } }\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": ["{{base_url}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Contribution Metrics",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query { getMyContributionMetrics { id repoId commitCount prCount issueCount consistencyScore lastUpdated } }\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": ["{{base_url}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Contribution Metrics (Mentor)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{mentor_jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query GetAllMetrics($repoId: String!) { getAllContributionMetrics(repoId: $repoId) { id studentGithubId commitCount prCount issueCount consistencyScore lastUpdated } }\",\n  \"variables\": {\n    \"repoId\": \"{{repository_id}}\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": ["{{base_url}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+		,
+		{
+			"name": "GraphQL Mutations",
+			"item": [
+				{
+					"name": "Enroll Student (Mentor Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{mentor_jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation EnrollStudent($input: EnrollStudentInput!) { enrollStudent(input: $input) { id githubId username email role isEnrolled enrolledBy createdAt } }\",\n  \"variables\": {\n    \"input\": {\n      \"githubUsername\": \"{{student_github_username}}\",\n      \"email\": \"{{student_email}}\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": ["{{base_url}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Repository (Mentor Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{mentor_jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation CreateRepository($input: CreateRepositoryInput!) { createRepository(input: $input) { id repoName repoUrl ownerGithubId linkedStudents createdAt } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoName\": \"{{repo_name}}\",\n      \"repoUrl\": \"{{repo_url}}\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": ["{{base_url}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Save Contribution Metrics (Student Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation SaveMetrics($input: SaveContributionMetricsInput!) { saveContributionMetrics(input: $input) { id repoId studentGithubId commitCount prCount issueCount consistencyScore lastUpdated } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoId\": \"{{repository_id}}\",\n      \"commitCount\": 25,\n      \"prCount\": 5,\n      \"issueCount\": 3,\n      \"consistencyScore\": 0.85\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": ["{{base_url}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+		,
+		{
+			"name": "AI Feedback",
+			"item": [
+				{
+					"name": "Generate AI Feedback",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation GenerateAIFeedback($input: GenerateAIFeedbackInput!) { generateAIFeedback(input: $input) { id repoId studentGithubId qualityScore strengths issues suggestions generatedAt } }\",\n  \"variables\": {\n    \"input\": {\n      \"repoId\": \"{{repository_id}}\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": ["{{base_url}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My AI Feedback",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query { getMyAIFeedback { id repoId qualityScore strengths issues suggestions generatedAt } }\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": ["{{base_url}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+		,
+		{
+			"name": "Error Scenarios",
+			"item": [
+				{
+					"name": "Unauthorized GraphQL Access",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query { getMe { id username } }\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": ["{{base_url}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid JWT Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer invalid.jwt.token"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query { getMe { id username } }\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": ["{{base_url}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Student Trying to Enroll Another Student",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"mutation EnrollStudent($input: EnrollStudentInput!) { enrollStudent(input: $input) { id username } }\",\n  \"variables\": {\n    \"input\": {\n      \"githubUsername\": \"anotherstudent\",\n      \"email\": \"another@example.com\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/graphql",
+							"host": ["{{base_url}}"],
+							"path": ["graphql"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "OAuth Callback Missing Code",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/github/callback",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "github", "callback"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+		,
+		{
+			"name": "Health Checks",
+			"item": [
+				{
+					"name": "Application Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Authentication Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/health",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "health"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Root Endpoint",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": ["{{base_url}}"],
+							"path": [""]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-extract JWT token from OAuth callback response",
+					"if (pm.response && pm.response.json && pm.response.json().access_token) {",
+					"    pm.environment.set('jwt_token', pm.response.json().access_token);",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "mentor_jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "student_jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "github_code",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "repository_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "student_github_username",
+			"value": "teststudent",
+			"type": "string"
+		},
+		{
+			"key": "student_email",
+			"value": "student@example.com",
+			"type": "string"
+		},
+		{
+			"key": "repo_name",
+			"value": "test-repository",
+			"type": "string"
+		},
+		{
+			"key": "repo_url",
+			"value": "https://github.com/mentor/test-repository",
+			"type": "string"
+		}
+	]
+}
