@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     debug: bool = True
     cors_origins: str = "http://localhost:3000,http://localhost:3001"
+    frontend_url: Optional[str] = None  # Frontend URL for OAuth redirects
     
     # GitHub API Configuration (for repository analysis)
     github_api_token: str
@@ -92,6 +93,17 @@ class Settings(BaseSettings):
         """Validate GitHub API token."""
         if not v:
             raise ValueError("GitHub API token is required for repository analysis")
+        return v
+    
+    @field_validator('gemini_api_key')
+    @classmethod
+    def validate_gemini_api_key(cls, v):
+        """Validate Gemini API key is set and not a placeholder."""
+        if v and v in ['your_gemini_api_key_here', 'your_gemini_api_key']:
+            raise ValueError(
+                "GEMINI_API_KEY must be set to a valid API key, not a placeholder. "
+                "Get your API key from: https://makersuite.google.com/app/apikey"
+            )
         return v
     
     def validate_llm_configuration(self) -> None:

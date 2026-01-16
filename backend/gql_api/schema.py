@@ -7,7 +7,7 @@ import strawberry
 from datetime import datetime
 from typing import Optional, List
 from enum import Enum
-from backend.graphql.context import get_context
+from backend.gql_api.context import get_context
 
 
 @strawberry.enum
@@ -71,6 +71,34 @@ class AIFeedback:
     generated_at: datetime = strawberry.field(description="Feedback generation timestamp")
 
 
+@strawberry.type
+class SkillTag:
+    """GraphQL SkillTag type for technical skills."""
+    
+    name: str = strawberry.field(description="Technical skill name (e.g., 'FastAPI')")
+    confidence: float = strawberry.field(description="Confidence score (0.0-1.0)")
+    evidence_file: str = strawberry.field(description="File path where skill was detected")
+
+
+@strawberry.type
+class UserSkillProfile:
+    """GraphQL UserSkillProfile type for user skill data."""
+    
+    verified_skills: List[SkillTag] = strawberry.field(description="List of verified technical skills")
+    last_scanned: Optional[datetime] = strawberry.field(description="Timestamp of last repository scan")
+
+
+@strawberry.type
+class CandidateResult:
+    """GraphQL CandidateResult type for job matching results."""
+    
+    id: str = strawberry.field(description="User ID")
+    username: str = strawberry.field(description="GitHub username")
+    email: Optional[str] = strawberry.field(description="User email address")
+    match_score: float = strawberry.field(description="Similarity score (0.0-1.0) indicating job match quality")
+    verified_skills: List[SkillTag] = strawberry.field(description="List of verified technical skills")
+
+
 # Input types for mutations
 @strawberry.input
 class EnrollStudentInput:
@@ -107,8 +135,8 @@ class GenerateAIFeedbackInput:
 
 
 # Import actual Query and Mutation classes
-from backend.graphql.queries import Query
-from backend.graphql.mutations import Mutation
+from backend.gql_api.queries import Query
+from backend.gql_api.mutations import Mutation
 
 
 # Create the GraphQL schema

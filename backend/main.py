@@ -12,8 +12,8 @@ from strawberry.fastapi import GraphQLRouter
 from backend.config import get_settings, validate_configuration
 from backend.database import connect_database, disconnect_database, get_database
 from backend.auth.routes import auth_router
-from backend.graphql.schema import schema
-from backend.graphql.context import get_context
+from backend.gql_api import schema as gql_schema
+from backend.gql_api import context as gql_context
 
 
 # Configure logging
@@ -231,8 +231,8 @@ app.include_router(auth_router, prefix="/auth", tags=["authentication"])
 
 # Create GraphQL router with context
 graphql_app = GraphQLRouter(
-    schema,
-    context_getter=get_context,
+    gql_schema.schema,
+    context_getter=gql_context.get_context,
     graphiql=settings.debug  # Enable GraphiQL in development
 )
 

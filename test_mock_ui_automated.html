@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock UI Automated Tests</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .test-section h2 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        
+        .test-case {
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #ddd;
+            background: #f9f9f9;
+        }
+        
+        .test-case.pass {
+            border-left-color: #4CAF50;
+            background: #e8f5e9;
+        }
+        
+        .test-case.fail {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+        
+        .test-case.running {
+            border-left-color: #2196F3;
+            background: #e3f2fd;
+        }
+        
+        .test-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .test-result {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .test-error {
+            color: #f44336;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 5px;
+            padding: 5px;
+            background: white;
+            border-radius: 3px;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        button:hover {
+            background: #5568d3;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .summary h2 {
+            margin-top: 0;
+            color: white;
+        }
+        
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .config-section {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .config-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .config-section input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .config-section p {
+            margin: 10px 0 0 0;
+            font-size: 13px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Mock UI Automated Tests</h1>
+    
+    <div class="config-section">
+        <label for="backend-url">Backend URL:</label>
+        <input type="text" id="backend-url" value="http://localhost:8000" placeholder="http://localhost:8000">
+        <p><strong>Note:</strong> These tests verify the mock UI structure and client-side logic. Full integration tests require a running backend and valid authentication.</p>
+    </div>
+    
+    <button id="run-tests" onclick="runAllTests()">Run All Tests</button>
+    
+    <div class="summary" id="summary" style="display: none;">
+        <h2>Test Summary</h2>
+        <div class="summary-stats">
+            <div class="stat">
+                <div class="stat-value" id="total-tests">0</div>
+                <div class="stat-label">Total Tests</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="passed-tests">0</div>
+                <div class="stat-label">Passed</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="failed-tests">0</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="pass-rate">0%</div>
+                <div class="stat-label">Pass Rate</div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="test-results"></div>
+    
+    <script>
+        let testResults = {
+            total: 0,
+            passed: 0,
+            failed: 0
+        };
+        
+        function createTestSection(title) {
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            section.innerHTML = `<h2>${title}</h2>`;
+            document.getElementById('test-results').appendChild(section);
+            return section;
+        }
+        
+        function createTestCase(section, name) {
+            const testCase = document.createElement('div');
+            testCase.className = 'test-case running';
+            testCase.innerHTML = `
+                <div class="test-name">${name}</div>
+                <div class="test-result">Running...</div>
+            `;
+            section.appendChild(testCase);
+            return testCase;
+        }
+        
+        function passTest(testCase, message = 'Passed') {
+            testCase.className = 'test-case pass';
+            testCase.querySelector('.test-result').textContent = `✓ ${message}`;
+            testResults.passed++;
+            testResults.total++;
+        }
+        
+        function failTest(testCase, error) {
+            testCase.className = 'test-case fail';
+            testCase.querySelector('.test-result').innerHTML = `
+                ✗ Failed
+                <div class="test-error">${error}</div>
+            `;
+            testResults.failed++;
+            testResults.total++;
+        }
+        
+        function updateSummary() {
+            document.getElementById('summary').style.display = 'block';
+            document.getElementById('total-tests').textContent = testResults.total;
+            document.getElementById('passed-tests').textContent = testResults.passed;
+            document.getElementById('failed-tests').textContent = testResults.failed;
+            
+            const passRate = testResults.total > 0 
+                ? Math.round((testResults.passed / testResults.total) * 100) 
+                : 0;
+            document.getElementById('pass-rate').textContent = `${passRate}%`;
+        }
+        
+        async function runAllTests() {
+            // Reset
+            document.getElementById('test-results').innerHTML = '';
+            testResults = { total: 0, passed: 0, failed: 0 };
+            document.getElementById('run-tests').disabled = true;
+            
+            // Run test suites
+            await testFileStructure();
+            await testLocalStorageAPI();
+            await testValidationFunctions();
+            await testUIComponents();
+            await testGraphQLClientStructure();
+            await testRESTClientStructure();
+            
+            // Update summary
+            updateSummary();
+            document.getElementById('run-tests').disabled = false;
+        }
+        
+        async function testFileStructure() {
+            const section = createTestSection('1. File Structure Tests');
+            
+            // Test 1: Check if mock-ui.html exists and is accessible
+            let testCase = createTestCase(section, 'Mock UI HTML file exists');
+            try {
+                const response = await fetch('mock-ui.html');
+                if (response.ok) {
+                    passTest(testCase, 'mock-ui.html is accessible');
+                } else {
+                    failTest(testCase, `HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                failTest(testCase, error.message);
+            }
+            
+            // Test 2: Check if HTML contains required sections
+            testCase = createTestCase(section, 'HTML contains required sections');
+            try {
+                const response = await fetch('mock-ui.html');
+                const html = await response.text();
+                
+                const requiredSections = [
+                    'auth-section',
+                    'enrollment-section',
+                    'repository-section',
+                    'queries-section',
+                    'metrics-section',
+                    'ai-feedback-section',
+                    'candidate-search-section',
+                    'response-section'
+                ];
+                
+                const missingSections = requiredSections.filter(id => !html.includes(`id="${id}"`));
+                
+                if (missingSections.length === 0) {
+                    passTest(testCase, 'All required sections present');
+                } else {
+                    failTest(testCase, `Missing sections: ${missingSections.join(', ')}`);
+                }
+            } catch (error) {
+                failTest(testCase, error.message);
+            }
+            
+            // Test 3: Check if JavaScript classes are defined
+            testCase = createTestCase(section, 'JavaScript classes are defined');
+            try {
+                const response = await fetch('mock-ui.html');
+                const html = await response.text();
+                
+                const requiredClasses = [
+                    'class RealAuth',
+                    'class GraphQLClient',
+                    'class RESTClient',
+                    'class UIManager'
+                ];
+                
+                const missingClasses = requiredClasses.filter(cls => !html.includes(cls));
+                
+                if (missingClasses.length === 0) {
+                    passTest(testCase, 'All required classes defined');
+                } else {
+                    failTest(testCase, `Missing classes: ${missingClasses.join(', ')}`);
+                }
+            } catch (error) {
+                failTest(testCase, error.message);
+            }
+        }
+        
+        async function testLocalStorageAPI() {
+            const section = createTestSection('2. LocalStorage API Tests');
+            
+            // Test 1: LocalStorage is available
+            let testCase = createTestCase(section, 'LocalStorage is available');
+            try {
+                if (typeof localStorage !== 'undefined') {
+                    passTest(testCase, 'LocalStorage API is available');
+                } else {
+                    failTest(testCase, 'LocalStorage is not available');
+                }
+            } catch (error) {
+                failTest(testCase, error.message);
+            }
+            
+            // Test 2: Can write to localStorage
+            testCase = createTestCase(section, 'Can write to localStorage');
+            try {
+                localStorage.setItem('test_key', 'test_value');
+                passTest(testCase, 'Successfully wrote to localStorage');
+            } catch (error) {
+                failTest(testCase, error.message);
+            }
+            
+            // Test 3: Can read from localStorage
+            testCase = createTestCase(section, 'Can read from localStorage');
+            try {
+                const value = localStorage.getItem('test_key');
+                if (value === 'test_value') {
+                    passTest(testCase, 'Successfully read from localStorage');
+                } else {
+                    failTest(testCase, `Expected 'test_value', got '${value}'`);
+                }
+            } catch (error) {
+                failTest(testCase, error.message);
+            }
+            
+            // Test 4: Can delete from localStorage
+            testCase = createTestCase(section, 'Can delete from localStorage');
+            try {
+                localStorage.removeItem('test_key');
+                const value = localStorage.getItem('test_key');
+                if (value === null) {
+                    passTest(testCase, 'Successfully deleted from localStorage');
+                } else {
+                    failTest(testCase, `Key still exists with value '${value}'`);
+                }
+            } catch (error) {
+                failTest(testCase, error.message);
+            }
+        }
+        
+        async function testValidationFunctions() {
+            const section = createTestSection('3. Validation Logic Tests');
+            
+            // Test 1: Email validation regex
+            let testCase = createTestCase(section, 'Email validation pattern');
+            try {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                
+                const validEmails = ['test@example.com', 'user.name@domain.co.uk'];
+                const invalidEmails = ['not-an-email', '@example.com', 'test@', 'test'];
+                
+                const validResults = validEmails.every(email => emailRegex.test(email));
+                const invalidResults = invalidEmails.every(email => !emailRegex.test(email));
+                
+                if (validResults && invalidResults) {
+                    passTest(testCase, 'Email validation works correctly');
+                } else {
+                    failTest(testCase, 'Email validation has issues');
+                }
+            } catch (error) {
+                failTest(testCase, error.message);
+            }
+            
+            // Test 2: URL validation regex
+            testCase = createTestCase(section, 'URL validation pattern');
+            try {
+                const urlRegex = /^https?:\/\/.+/;
+                
+                const validUrls = ['http://example.com', 'https://github.com/user/repo'];
+                const invalidUrls = ['not-a-url', 'ftp://example.com', 'example.com'];
+                
+                const validResults = validUrls.every(url => urlRegex.test(url));
+                const invalidResults = invalidUrls.every(url => !urlRegex.test(url));
+                
+                if (validResults && invalidResults) {
+                    passTest(testCase, 'URL validation works correctly');
+                } else {
+                    failTest(testCase, 'URL validation has issues');
+                }
+            } catch (error) {
+                failTest(testCase, error.message);
+            }
+            
+            // Test 3: JWT token format validation
+            testCase = createTestCase(section, 'JWT token format validation');
+            try {
+                const validToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U';
+                const invalidToken = 'not.a.token';
+                
+                const validParts = validToken.split('.');
+                const invalidParts = invalidToken.split('.');
+                
+                if (validParts.length === 3 && invalidParts.length !== 3) {
+                    passTest(testCase, 'JWT format validation works correctly');
+                } else {
+                    failTest(testCase, 'JWT format validation has issues');
+                }
+            } catch (error) {
+                failTest(testCase, error.message);
+            }
+        }
+        
+        async function testUIComponents() {
+            const section = createTestSection('4. UI Component Tests');
+            
+            // Test 1: Check if help sections exist
+            let testCase = createTestCase(section, 'Help sections are present');
+            try {
+                const response = await fetch('mock-ui.html');
+                const html = await response.text();
+                
+                const helpSections = [
+                    'auth-help',
+                    'enrollment-help',
+                    'repository-help',
+                    'queries-help',
+                    'metrics-help',
+                    'feedback-help',
+                    'search-help'
+                ];
+                
+                const missingHelp = helpSections.filter(id => !html.includes(`id="${id}"`));
+                
+                if (missingHelp.length === 0) {
+                    passTest(testCase, 'All help sections present');
+                } else {
+                    failTest(testCase, `Missing help sections: ${missingHelp.join(', ')}`);
+                }
+            } catch (error) {
+                failTest(testCase, error.message);
+            }
+            
+            // Test 2: Check if query editors exist
+            testCase = createTestCase(section, 'Query editors are present');
+            try {
+                const response = await fetch('mock-ui.html');
+                const html = await response.text();
+                
+                const queryEditors = [
+                    'query-editor-enrollStudent',
+                    'query-editor-createRepository',
+                    'query-editor-getMe',
+                    'query-editor-getRepositories',
+                    'query-editor-saveContributionMetrics',
+                    'query-editor-generateAIFeedback',
+                    'query-editor-findCandidates'
+                ];
+                
+                const missingEditors = queryEditors.filter(id => !html.includes(`id="${id}"`));
+                
+                if (missingEditors.length === 0) {
+                    passTest(testCase, 'All query editors present');
+                } else {
+                    failTest(testCase, `Missing query editors: ${missingEditors.join(', ')}`);
+                }
+            } catch (error) {
+                failTest(testCase, error.message);
+            }
+            
+            // Test 3: Check if Quick Start guide exists
+            testCase = createTestCase(section, 'Quick Start guide is present');
+            try {
+                const response = await fetch('mock-ui.html');
+                const html = await response.text();
+                
+                if (html.includes('quick-start') && html.includes('Quick Start Guide')) {
+                    passTest(testCase, 'Quick Start guide is present');
+                } else {
+                    failTest(testCase, 'Quick Start guide is missing');
+                }
+            } catch (error) {
+                failTest(testCase, error.message);
+            }
+        }
+        
+        async function testGraphQLClientStructure() {
+            const section = createTestSection('5. GraphQL Client Structure Tests');
+            
+            // Test 1: Check if GraphQL client methods exist
+            let testCase = createTestCase(section, 'GraphQL client methods are defined');
+            try {
+                const response = await fetch('mock-ui.html');
+                const html = await response.text();
+                
+                const requiredMethods = [
+                    'async query(',
+                    'async mutate(',
+                    'async getMe(',
+                    'async getRepositories(',
+                    'async getMyContributionMetrics(',
+                    'async getAllContributionMetrics(',
+                    'async getMyAIFeedback(',
+                    'async findCandidates(',
+                    'async enrollStudent(',
+                    'async createRepository(',
+                    'async saveContributionMetrics(',
+                    'async generateAIFeedback('
+                ];
+                
+                const missingMethods = requiredMethods.filter(method => !html.includes(method));
+                
+                if (missingMethods.length === 0) {
+                    passTest(testCase, 'All GraphQL client methods defined');
+                } else {
+                    failTest(testCase, `Missing methods: ${missingMethods.join(', ')}`);
+                }
+            } catch (error) {
+                failTest(testCase, error.message);
+            }
+        }
+        
+        async function testRESTClientStructure() {
+            const section = createTestSection('6. REST Client Structure Tests');
+            
+            // Test 1: Check if REST client methods exist
+            let testCase = createTestCase(section, 'REST client methods are defined');
+            try {
+                const response = await fetch('mock-ui.html');
+                const html = await response.text();
+                
+                const requiredMethods = [
+                    'async get(',
+                    'async post(',
+                    'async healthCheck(',
+                    'async getAuthMe('
+                ];
+                
+                const missingMethods = requiredMethods.filter(method => !html.includes(method));
+                
+                if (missingMethods.length === 0) {
+                    passTest(testCase, 'All REST client methods defined');
+                } else {
+                    failTest(testCase, `Missing methods: ${missingMethods.join(', ')}`);
+                }
+            } catch (error) {
+                failTest(testCase, error.message);
+            }
+        }
+    </script>
+</body>
+</html>

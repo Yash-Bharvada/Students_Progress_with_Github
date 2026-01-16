@@ -8,9 +8,10 @@ from typing import List, Optional
 import strawberry
 from strawberry.types import Info
 from bson import ObjectId
-from backend.graphql.schema import User, Repository, ContributionMetrics, AIFeedback, Role
-from backend.graphql.permissions import IsAuthenticated, IsMentor, IsStudent
+from backend.gql_api.schema import User, Repository, ContributionMetrics, AIFeedback, Role, SkillTag, CandidateResult
+from backend.gql_api.permissions import IsAuthenticated, IsMentor, IsStudent
 from backend.database import get_database
+from backend.services.recommendation import RecommendationService
 from backend.models import Role as ModelRole
 from backend.exceptions import (
     AuthenticationError,
@@ -490,3 +491,100 @@ class Query:
             db_error = handle_database_error(e, "AI feedback retrieval")
             log_error(db_error, {"query": "get_my_ai_feedback", "repo_id": repo_id})
             raise Exception(f"Failed to get AI feedback: {db_error.message}")
+    
+    @strawberry.field(permission_classes=[IsAuthenticated])
+    async def find_candidates(self, info: Info, job_description: str) -> List[CandidateResult]:
+        """
+        Find students matching a job description using AI-powered skill matching.
+        
+        Uses local SentenceTransformers for embedding generation and scikit-learn
+        for cosine similarity calculations. Returns top 5 candidates with match scores > 0.6.
+        
+        Args:
+            job_description: Text describing job requirements and desired skills
+            
+        Returns:
+            List of CandidateResult objects with student information and match scores,
+            sorted by match score in descending order
+            
+        Raises:
+            Exception: If user is not authenticated or search fails
+        """
+        try:
+            # Get current user from context
+            current_user = info.context.user
+            if not current_user:
+                raise AuthenticationError(
+                    message="Authentication required",
+                    details={"context": "GraphQL find_candidates query"}
+                )
+            
+            github_id = current_user.get('github_id')
+            if not github_id:
+                raise AuthenticationError(
+                    message="Invalid user context: missing github_id",
+                    details={"user_context": current_user}
+                )
+            
+            # Validate job description
+            if not job_description or not job_description.strip():
+                raise InvalidInputError(
+                    field="job_description",
+                    reason="Job description is required and cannot be empty"
+                )
+            
+            logger.info(f"Finding candidates for job description by user {github_id}")
+            
+            # Get database connection
+            db = get_database()
+            
+            # Initialize recommendation service
+            recommendation_service = RecommendationService(db)
+            
+            # Find matching students
+            matches = await recommendation_service.find_matching_students(job_description)
+            
+            # Transform to GraphQL CandidateResult types
+            results = []
+            for match in matches:
+                user_doc = match.user
+                
+                # Extract verified skills from skill profile
+                verified_skills = []
+                if 'skill_profile' in user_doc and 'verified_skills' in user_doc['skill_profile']:
+                    for skill in user_doc['skill_profile']['verified_skills']:
+                        verified_skills.append(SkillTag(
+                            name=skill['name'],
+                            confidence=skill['confidence'],
+                            evidence_file=skill['evidence_file']
+                        ))
+                
+                results.append(CandidateResult(
+                    id=str(user_doc['_id']),
+                    username=user_doc['username'],
+                    email=user_doc.get('email'),
+                    match_score=match.match_score,
+                    verified_skills=verified_skills
+                ))
+            
+            logger.info(f"Returning {len(results)} candidates for user {github_id}")
+            return results
+            
+        except (AuthenticationError, InvalidInputError) as e:
+            log_error(e, {
+                "query": "find_candidates",
+                "github_id": github_id if 'github_id' in locals() else None
+            })
+            raise Exception(f"{e.error_code}: {e.message}")
+        except ValueError as e:
+            # Handle validation errors from recommendation service
+            error = InvalidInputError(
+                field="job_description",
+                reason=str(e)
+            )
+            log_error(error, {"query": "find_candidates"})
+            raise Exception(f"{error.error_code}: {error.message}")
+        except Exception as e:
+            db_error = handle_database_error(e, "candidate search")
+            log_error(db_error, {"query": "find_candidates"})
+            raise Exception(f"Failed to find candidates: {db_error.message}")

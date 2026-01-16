@@ -1,0 +1,3076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Mock UI Testing Interface - Student Progress Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            min-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .config-section {
+            background-color: #f9f9f9;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .config-section label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .config-section input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .config-section button {
+            padding: 8px 20px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .config-section button:hover {
+            background-color: #1976D2;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .section h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .section-subtitle {
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+            margin-top: -10px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+
+        .btn-secondary {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #1976D2;
+        }
+
+        .btn-danger {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #da190b;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .auth-status {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .auth-status p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .auth-status strong {
+            color: #667eea;
+        }
+
+        .user-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .user-info-item {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .user-info-item label {
+            font-size: 12px;
+            color: #666;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .user-info-item span {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .response-area {
+            background-color: #263238;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            min-height: 200px;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .response-area.error {
+            color: #ff6b6b;
+        }
+
+        .response-area.success {
+            color: #4CAF50;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading-spinner.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 10px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .role-badge.mentor {
+            background-color: #e3f2fd;
+            color: #1976D2;
+        }
+
+        .role-badge.student {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .enrolled-students-list {
+            margin-top: 15px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .student-item {
+            background-color: #fff;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border-left: 3px solid #4CAF50;
+        }
+
+        .student-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .student-item p {
+            margin: 3px 0;
+            font-size: 14px;
+        }
+
+        .student-item .status {
+            color: #4CAF50;
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        .query-editor {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .query-editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .query-editor-header h4 {
+            font-size: 14px;
+            color: #667eea;
+            margin: 0;
+        }
+
+        .query-editor-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-toggle {
+            padding: 6px 12px;
+            font-size: 12px;
+            background-color: #667eea;
+            color: white;
+        }
+
+        .btn-toggle:hover {
+            background-color: #5568d3;
+        }
+
+        .btn-reset {
+            padding: 6px 12px;
+            font-size: 12px;
+            background-color: #ff9800;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background-color: #e68900;
+        }
+
+        .query-editor textarea {
+            width: 100%;
+            min-height: 150px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+            color: #333;
+        }
+
+        .query-editor-info {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                min-width: 600px;
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 650px) {
+            .container {
+                min-width: 100%;
+            }
+
+            body {
+                padding: 10px;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .section {
+                padding: 15px;
+            }
+        }
+
+        /* Help Section Styles */
+        .help-section {
+            background-color: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .help-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .help-header h3 {
+            font-size: 16px;
+            color: #1976D2;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .help-toggle {
+            font-size: 20px;
+            color: #1976D2;
+            font-weight: bold;
+        }
+
+        .help-content {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #90caf9;
+        }
+
+        .help-content.collapsed {
+            display: none;
+        }
+
+        .help-content h4 {
+            font-size: 14px;
+            color: #1976D2;
+            margin: 15px 0 8px 0;
+        }
+
+        .help-content p {
+            font-size: 13px;
+            color: #333;
+            margin: 5px 0;
+            line-height: 1.5;
+        }
+
+        .help-content ul, .help-content ol {
+            font-size: 13px;
+            color: #333;
+            margin: 8px 0;
+            padding-left: 25px;
+        }
+
+        .help-content li {
+            margin: 5px 0;
+            line-height: 1.5;
+        }
+
+        .help-content code {
+            background-color: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #d32f2f;
+        }
+
+        .example-box {
+            background-color: #fff;
+            border: 1px solid #90caf9;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .example-label {
+            font-weight: 600;
+            color: #1976D2;
+            margin-bottom: 5px;
+        }
+
+        .quick-start {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .quick-start h2 {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: white;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+
+        .quick-start p {
+            font-size: 14px;
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+
+        .quick-start ol {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+
+        .quick-start li {
+            margin: 8px 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .quick-start strong {
+            color: #fff;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🧪 Mock UI Testing Interface</h1>
+            <p>Student Progress Tracker - Backend Testing Tool</p>
+        </div>
+
+        <!-- Configuration Section -->
+        <div class="config-section">
+            <label for="backend-url">Backend URL:</label>
+            <input type="text" id="backend-url" value="http://localhost:8000" placeholder="http://localhost:8000">
+            <button onclick="updateBackendUrl()">Update</button>
+            <button onclick="performHealthCheck()" style="background-color: #4CAF50;">Health Check</button>
+            <span id="backend-url-status" style="margin-left: 10px; font-size: 12px; color: #4CAF50;"></span>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Quick Start Section -->
+            <div class="quick-start">
+                <h2>🚀 Quick Start Guide</h2>
+                <p><strong>Welcome to the Mock UI Testing Interface!</strong> This tool allows you to test all backend functionality without a production frontend.</p>
+                
+                <p><strong>Testing Workflow:</strong></p>
+                <ol>
+                    <li><strong>Configure Backend:</strong> Set your backend URL (default: http://localhost:8000)</li>
+                    <li><strong>Login:</strong> Click "Login with GitHub" to authenticate via OAuth (or paste a JWT token for testing)</li>
+                    <li><strong>Test Features:</strong> Based on your role (MENTOR or STUDENT), different sections will be available</li>
+                    <li><strong>View Results:</strong> All API responses appear in the "Response / Results" section at the bottom</li>
+                </ol>
+                
+                <p><strong>Role-Based Access:</strong></p>
+                <ul>
+                    <li><strong>MENTOR:</strong> Can enroll students, create repositories, view all metrics, and generate feedback for any student</li>
+                    <li><strong>STUDENT:</strong> Can save their own metrics, view their own data, and generate feedback for themselves</li>
+                </ul>
+                
+                <p><strong>💡 Tip:</strong> Expand the help sections (marked with ℹ️) in each feature area for detailed instructions and examples!</p>
+            </div>
+
+            <!-- Authentication Section -->
+            <div class="section" id="auth-section">
+                <h2>🔐 Authentication</h2>
+                
+                <!-- Help Section for Authentication -->
+                <div class="help-section">
+                    <div class="help-header" onclick="toggleHelp('auth-help')">
+                        <h3>ℹ️ How to Use Authentication</h3>
+                        <span class="help-toggle" id="auth-help-toggle">−</span>
+                    </div>
+                    <div class="help-content" id="auth-help">
+                        <h4>Step-by-Step Instructions:</h4>
+                        <ol>
+                            <li><strong>GitHub OAuth Login (Recommended):</strong> Click "Login with GitHub" to authenticate using real GitHub OAuth</li>
+                            <li><strong>Manual Token Entry (For Testing):</strong> If you have a pre-generated JWT token, paste it in the text area and click "Use Token"</li>
+                            <li><strong>View Profile:</strong> Once logged in, your user information will be displayed</li>
+                            <li><strong>Copy Token:</strong> Use the "Copy Token" button to copy your JWT for use in other tools (like Postman)</li>
+                            <li><strong>Logout:</strong> Click "Logout" to clear your session</li>
+                        </ol>
+                        
+                        <h4>Role Requirements:</h4>
+                        <p>No role required - anyone can login. Your role (MENTOR or STUDENT) determines which features you can access.</p>
+                        
+                        <h4>Example Token Format:</h4>
+                        <div class="example-box">
+                            <div class="example-label">JWT Token Example:</div>
+                            eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+                        </div>
+                        
+                        <h4>Important Notes:</h4>
+                        <ul>
+                            <li>Students must be enrolled by a mentor before they can login via GitHub OAuth</li>
+                            <li>Tokens are stored in browser localStorage and persist across page reloads</li>
+                            <li>Token expiration warnings will appear if your token is about to expire</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="auth-status" id="auth-status">
+                    <p><strong>Status:</strong> <span id="auth-status-text">Not logged in</span></p>
+                </div>
+
+                <div class="form-group">
+                    <button class="btn-primary" onclick="loginWithGitHub()">Login with GitHub</button>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <p style="font-size: 14px; color: #666; margin-bottom: 10px;">OR (for testing with existing token):</p>
+                    <label for="manual-token-input">Paste JWT Token:</label>
+                    <textarea id="manual-token-input" placeholder="Paste your JWT token here for testing..." style="font-size: 11px; min-height: 80px;"></textarea>
+                    <button class="btn-secondary" onclick="useManualToken()" style="margin-top: 10px;">Use Token</button>
+                </div>
+
+                <div class="user-info hidden" id="user-info">
+                    <div class="user-info-item">
+                        <label>Username</label>
+                        <span id="user-username">-</span>
+                    </div>
+                    <div class="user-info-item">
+                        <label>Role</label>
+                        <span id="user-role">-</span>
+                    </div>
+                    <div class="user-info-item">
+                        <label>Email</label>
+                        <span id="user-email">-</span>
+                    </div>
+                    <div class="user-info-item">
+                        <label>GitHub ID</label>
+                        <span id="user-github-id">-</span>
+                    </div>
+                </div>
+
+                <div class="form-group hidden" id="token-display-group">
+                    <label>Current Token:</label>
+                    <textarea id="current-token" readonly style="font-size: 11px; min-height: 60px;"></textarea>
+                    <div id="token-expiration-warning" class="hidden" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 10px; margin-top: 10px; color: #856404;">
+                        <strong>⚠️ Token Expiration Warning:</strong>
+                        <p id="token-expiration-message" style="margin: 5px 0 0 0; font-size: 13px;"></p>
+                    </div>
+                    <button class="btn-secondary" onclick="copyToken()" style="margin-top: 10px;">Copy Token</button>
+                    <button class="btn-danger" onclick="logout()" style="margin-top: 10px;">Logout</button>
+                </div>
+            </div>
+
+            <!-- Student Enrollment Section -->
+            <div class="section hidden" id="enrollment-section">
+                <h2>👥 Student Enrollment <span class="role-badge mentor">MENTOR ONLY</span></h2>
+                <p class="section-subtitle">This feature requires MENTOR role</p>
+
+                <!-- Help Section for Student Enrollment -->
+                <div class="help-section">
+                    <div class="help-header" onclick="toggleHelp('enrollment-help')">
+                        <h3>ℹ️ How to Enroll Students</h3>
+                        <span class="help-toggle" id="enrollment-help-toggle">−</span>
+                    </div>
+                    <div class="help-content" id="enrollment-help">
+                        <h4>Step-by-Step Instructions:</h4>
+                        <ol>
+                            <li>Enter the student's <strong>GitHub username</strong> (not their display name)</li>
+                            <li>Enter the student's <strong>email address</strong></li>
+                            <li>Click <strong>"Enroll Student"</strong></li>
+                            <li>The student will be created in the system and can now login via GitHub OAuth</li>
+                            <li>Click <strong>"Refresh List"</strong> to see all students you've enrolled</li>
+                        </ol>
+                        
+                        <h4>Role Requirements:</h4>
+                        <p><strong>MENTOR only</strong> - Students cannot enroll other students</p>
+                        
+                        <h4>Example Values:</h4>
+                        <div class="example-box">
+                            <div class="example-label">GitHub Username:</div>
+                            student1
+                        </div>
+                        <div class="example-box">
+                            <div class="example-label">Email:</div>
+                            student1@example.com
+                        </div>
+                        
+                        <h4>Important Notes:</h4>
+                        <ul>
+                            <li>The GitHub username must match the student's actual GitHub account</li>
+                            <li>Once enrolled, students can login using the "Login with GitHub" button</li>
+                            <li>The enrolled students list is fetched from the backend and shows all students you've enrolled</li>
+                            <li>Each enrolled student will have the STUDENT role automatically assigned</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="enroll-username">GitHub Username:</label>
+                        <input type="text" id="enroll-username" placeholder="e.g., student1 or john-doe">
+                    </div>
+                    <div class="form-group">
+                        <label for="enroll-email">Email:</label>
+                        <input type="email" id="enroll-email" placeholder="e.g., student1@example.com">
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="enrollStudent()">Enroll Student</button>
+
+                <!-- Query Editor for enrollStudent -->
+                <div class="query-editor hidden" id="query-editor-enrollStudent">
+                    <div class="query-editor-header">
+                        <h4>GraphQL Mutation: enrollStudent</h4>
+                        <div class="query-editor-controls">
+                            <button class="btn-reset" onclick="resetQuery('enrollStudent')">Reset to Default</button>
+                            <button class="btn-toggle" onclick="toggleQueryEditor('enrollStudent')">Hide Query</button>
+                        </div>
+                    </div>
+                    <textarea id="query-text-enrollStudent"></textarea>
+                    <p class="query-editor-info">Edit the mutation above. Changes will be used when you click "Enroll Student".</p>
+                </div>
+
+                <div style="margin-top: 10px;">
+                    <button class="btn-toggle" onclick="toggleQueryEditor('enrollStudent')">Show/Edit enrollStudent Mutation</button>
+                </div>
+
+                <div class="enrolled-students-list" id="enrolled-students-list">
+                    <h3 style="margin-bottom: 10px; font-size: 16px;">Enrolled Students (from backend):</h3>
+                    <div id="students-container">
+                        <p style="color: #666; font-style: italic;">No students enrolled yet.</p>
+                    </div>
+                    <button class="btn-secondary" onclick="refreshEnrolledStudents()" style="margin-top: 10px;">Refresh List</button>
+                    
+                    <!-- Query Editor for getEnrolledStudents -->
+                    <div class="query-editor hidden" id="query-editor-getEnrolledStudents">
+                        <div class="query-editor-header">
+                            <h4>GraphQL Query: getEnrolledStudents</h4>
+                            <div class="query-editor-controls">
+                                <button class="btn-reset" onclick="resetQuery('getEnrolledStudents')">Reset to Default</button>
+                                <button class="btn-toggle" onclick="toggleQueryEditor('getEnrolledStudents')">Hide Query</button>
+                            </div>
+                        </div>
+                        <textarea id="query-text-getEnrolledStudents"></textarea>
+                        <p class="query-editor-info">Edit the query above. Changes will be used when you click "Refresh List".</p>
+                    </div>
+                    
+                    <div style="margin-top: 10px;">
+                        <button class="btn-toggle" onclick="toggleQueryEditor('getEnrolledStudents')">Show/Edit getEnrolledStudents Query</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Repository Management Section -->
+            <div class="section hidden" id="repository-section">
+                <h2>📁 Repository Management <span class="role-badge mentor">MENTOR ONLY</span></h2>
+                <p class="section-subtitle">This feature requires MENTOR role</p>
+
+                <!-- Help Section for Repository Management -->
+                <div class="help-section">
+                    <div class="help-header" onclick="toggleHelp('repository-help')">
+                        <h3>ℹ️ How to Create Repositories</h3>
+                        <span class="help-toggle" id="repository-help-toggle">−</span>
+                    </div>
+                    <div class="help-content" id="repository-help">
+                        <h4>Step-by-Step Instructions:</h4>
+                        <ol>
+                            <li>Enter a <strong>repository name</strong> (descriptive name for the project)</li>
+                            <li>Enter the <strong>repository URL</strong> (must be a valid GitHub URL)</li>
+                            <li>Click <strong>"Create Repository"</strong></li>
+                            <li>The repository ID will be displayed - save this for later use in metrics and feedback</li>
+                        </ol>
+                        
+                        <h4>Role Requirements:</h4>
+                        <p><strong>MENTOR only</strong> - Only mentors can create repositories</p>
+                        
+                        <h4>Example Values:</h4>
+                        <div class="example-box">
+                            <div class="example-label">Repository Name:</div>
+                            my-awesome-project
+                        </div>
+                        <div class="example-box">
+                            <div class="example-label">Repository URL:</div>
+                            https://github.com/username/my-awesome-project
+                        </div>
+                        
+                        <h4>Important Notes:</h4>
+                        <ul>
+                            <li>The URL must start with <code>http://</code> or <code>https://</code></li>
+                            <li>Save the repository ID from the response - you'll need it for metrics and feedback operations</li>
+                            <li>Students will use this repository ID when saving their contribution metrics</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="repo-name">Repository Name:</label>
+                        <input type="text" id="repo-name" placeholder="e.g., my-awesome-project or student-tracker">
+                    </div>
+                    <div class="form-group">
+                        <label for="repo-url">Repository URL:</label>
+                        <input type="text" id="repo-url" placeholder="e.g., https://github.com/username/repo-name">
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="createRepository()">Create Repository</button>
+
+                <!-- Query Editor for createRepository -->
+                <div class="query-editor hidden" id="query-editor-createRepository">
+                    <div class="query-editor-header">
+                        <h4>GraphQL Mutation: createRepository</h4>
+                        <div class="query-editor-controls">
+                            <button class="btn-reset" onclick="resetQuery('createRepository')">Reset to Default</button>
+                            <button class="btn-toggle" onclick="toggleQueryEditor('createRepository')">Hide Query</button>
+                        </div>
+                    </div>
+                    <textarea id="query-text-createRepository"></textarea>
+                    <p class="query-editor-info">Edit the mutation above. Changes will be used when you click "Create Repository".</p>
+                </div>
+
+                <div style="margin-top: 10px;">
+                    <button class="btn-toggle" onclick="toggleQueryEditor('createRepository')">Show/Edit createRepository Mutation</button>
+                </div>
+            </div>
+
+            <!-- GraphQL Queries Section -->
+            <div class="section" id="queries-section">
+                <h2>🔍 GraphQL Queries</h2>
+
+                <!-- Help Section for GraphQL Queries -->
+                <div class="help-section">
+                    <div class="help-header" onclick="toggleHelp('queries-help')">
+                        <h3>ℹ️ How to Use GraphQL Queries</h3>
+                        <span class="help-toggle" id="queries-help-toggle">−</span>
+                    </div>
+                    <div class="help-content" id="queries-help">
+                        <h4>Available Queries:</h4>
+                        <ul>
+                            <li><strong>Get My Profile:</strong> Retrieve your user profile information (username, role, email, etc.)</li>
+                            <li><strong>Get Repositories:</strong> List all repositories in the system</li>
+                            <li><strong>Get My Metrics:</strong> View your contribution metrics (STUDENT only)</li>
+                            <li><strong>Get My AI Feedback:</strong> View AI-generated feedback for your contributions</li>
+                            <li><strong>Get All Metrics for Repo:</strong> View all student metrics for a repository (MENTOR only)</li>
+                        </ul>
+                        
+                        <h4>Step-by-Step Instructions:</h4>
+                        <ol>
+                            <li>Click any query button to execute that query</li>
+                            <li>Results will appear in the "Response / Results" section below</li>
+                            <li>Use "Show/Edit Query" buttons to view or customize the GraphQL queries</li>
+                            <li>For mentor queries, enter a repository ID first</li>
+                        </ol>
+                        
+                        <h4>Role Requirements:</h4>
+                        <ul>
+                            <li><strong>Get My Profile, Get Repositories, Get My AI Feedback:</strong> Available to all authenticated users</li>
+                            <li><strong>Get My Metrics:</strong> STUDENT only</li>
+                            <li><strong>Get All Metrics for Repo:</strong> MENTOR only</li>
+                        </ul>
+                        
+                        <h4>Example Repository ID:</h4>
+                        <div class="example-box">
+                            <div class="example-label">Repository ID (MongoDB ObjectId):</div>
+                            507f1f77bcf86cd799439011
+                        </div>
+                        
+                        <h4>Important Notes:</h4>
+                        <ul>
+                            <li>All queries require authentication (you must be logged in)</li>
+                            <li>Repository IDs are returned when you create a repository</li>
+                            <li>You can edit GraphQL queries to customize the fields returned</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn-secondary" onclick="getMyProfile()">Get My Profile</button>
+                    <button class="btn-secondary" onclick="getRepositories()">Get Repositories</button>
+                    <button class="btn-secondary" onclick="getMyMetrics()">Get My Metrics</button>
+                    <button class="btn-secondary" onclick="getMyAIFeedback()">Get My AI Feedback</button>
+                </div>
+
+                <!-- Query Editors -->
+                <div class="query-editor hidden" id="query-editor-getMe">
+                    <div class="query-editor-header">
+                        <h4>GraphQL Query: getMe</h4>
+                        <div class="query-editor-controls">
+                            <button class="btn-reset" onclick="resetQuery('getMe')">Reset to Default</button>
+                            <button class="btn-toggle" onclick="toggleQueryEditor('getMe')">Hide Query</button>
+                        </div>
+                    </div>
+                    <textarea id="query-text-getMe"></textarea>
+                    <p class="query-editor-info">Edit the query above. Changes will be used when you click "Get My Profile".</p>
+                </div>
+
+                <div class="query-editor hidden" id="query-editor-getRepositories">
+                    <div class="query-editor-header">
+                        <h4>GraphQL Query: getRepositories</h4>
+                        <div class="query-editor-controls">
+                            <button class="btn-reset" onclick="resetQuery('getRepositories')">Reset to Default</button>
+                            <button class="btn-toggle" onclick="toggleQueryEditor('getRepositories')">Hide Query</button>
+                        </div>
+                    </div>
+                    <textarea id="query-text-getRepositories"></textarea>
+                    <p class="query-editor-info">Edit the query above. Changes will be used when you click "Get Repositories".</p>
+                </div>
+
+                <div class="query-editor hidden" id="query-editor-getMyContributionMetrics">
+                    <div class="query-editor-header">
+                        <h4>GraphQL Query: getMyContributionMetrics</h4>
+                        <div class="query-editor-controls">
+                            <button class="btn-reset" onclick="resetQuery('getMyContributionMetrics')">Reset to Default</button>
+                            <button class="btn-toggle" onclick="toggleQueryEditor('getMyContributionMetrics')">Hide Query</button>
+                        </div>
+                    </div>
+                    <textarea id="query-text-getMyContributionMetrics"></textarea>
+                    <p class="query-editor-info">Edit the query above. Changes will be used when you click "Get My Metrics".</p>
+                </div>
+
+                <div class="query-editor hidden" id="query-editor-getMyAIFeedback">
+                    <div class="query-editor-header">
+                        <h4>GraphQL Query: getMyAIFeedback</h4>
+                        <div class="query-editor-controls">
+                            <button class="btn-reset" onclick="resetQuery('getMyAIFeedback')">Reset to Default</button>
+                            <button class="btn-toggle" onclick="toggleQueryEditor('getMyAIFeedback')">Hide Query</button>
+                        </div>
+                    </div>
+                    <textarea id="query-text-getMyAIFeedback"></textarea>
+                    <p class="query-editor-info">Edit the query above. Changes will be used when you click "Get My AI Feedback".</p>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <button class="btn-toggle" onclick="toggleQueryEditor('getMe')">Show/Edit getMe Query</button>
+                    <button class="btn-toggle" onclick="toggleQueryEditor('getRepositories')">Show/Edit getRepositories Query</button>
+                    <button class="btn-toggle" onclick="toggleQueryEditor('getMyContributionMetrics')">Show/Edit getMyContributionMetrics Query</button>
+                    <button class="btn-toggle" onclick="toggleQueryEditor('getMyAIFeedback')">Show/Edit getMyAIFeedback Query</button>
+                </div>
+
+                <div class="form-group hidden" id="mentor-queries" style="margin-top: 20px;">
+                    <h3 style="font-size: 16px; margin-bottom: 10px;">Mentor Only: <span class="role-badge mentor">MENTOR ONLY</span></h3>
+                    <label for="mentor-repo-id">Repository ID:</label>
+                    <input type="text" id="mentor-repo-id" placeholder="e.g., 507f1f77bcf86cd799439011 (MongoDB ObjectId)">
+                    <button class="btn-secondary" onclick="getAllMetrics()" style="margin-top: 10px;">Get All Metrics for Repo</button>
+                    
+                    <!-- Query Editor for getAllContributionMetrics -->
+                    <div class="query-editor hidden" id="query-editor-getAllContributionMetrics">
+                        <div class="query-editor-header">
+                            <h4>GraphQL Query: getAllContributionMetrics</h4>
+                            <div class="query-editor-controls">
+                                <button class="btn-reset" onclick="resetQuery('getAllContributionMetrics')">Reset to Default</button>
+                                <button class="btn-toggle" onclick="toggleQueryEditor('getAllContributionMetrics')">Hide Query</button>
+                            </div>
+                        </div>
+                        <textarea id="query-text-getAllContributionMetrics"></textarea>
+                        <p class="query-editor-info">Edit the query above. Changes will be used when you click "Get All Metrics for Repo".</p>
+                    </div>
+                    
+                    <div style="margin-top: 10px;">
+                        <button class="btn-toggle" onclick="toggleQueryEditor('getAllContributionMetrics')">Show/Edit getAllContributionMetrics Query</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contribution Metrics Section -->
+            <div class="section hidden" id="metrics-section">
+                <h2>📊 Contribution Metrics <span class="role-badge student">STUDENT ONLY</span></h2>
+                <p class="section-subtitle">This feature requires STUDENT role</p>
+
+                <!-- Help Section for Contribution Metrics -->
+                <div class="help-section">
+                    <div class="help-header" onclick="toggleHelp('metrics-help')">
+                        <h3>ℹ️ How to Save Contribution Metrics</h3>
+                        <span class="help-toggle" id="metrics-help-toggle">−</span>
+                    </div>
+                    <div class="help-content" id="metrics-help">
+                        <h4>Step-by-Step Instructions:</h4>
+                        <ol>
+                            <li>Enter the <strong>Repository ID</strong> (get this from your mentor or from the repository list)</li>
+                            <li>Enter your <strong>Commit Count</strong> (number of commits you've made)</li>
+                            <li>Enter your <strong>Pull Request Count</strong> (number of PRs you've created)</li>
+                            <li>Enter your <strong>Issue Count</strong> (number of issues you've worked on)</li>
+                            <li>Enter your <strong>Consistency Score</strong> (0.0 to 1.0, representing how consistently you contribute)</li>
+                            <li>Click <strong>"Save Metrics"</strong></li>
+                        </ol>
+                        
+                        <h4>Role Requirements:</h4>
+                        <p><strong>STUDENT only</strong> - Students save their own metrics</p>
+                        
+                        <h4>Example Values:</h4>
+                        <div class="example-box">
+                            <div class="example-label">Repository ID:</div>
+                            507f1f77bcf86cd799439011
+                        </div>
+                        <div class="example-box">
+                            <div class="example-label">Commits:</div>
+                            50
+                        </div>
+                        <div class="example-box">
+                            <div class="example-label">Pull Requests:</div>
+                            10
+                        </div>
+                        <div class="example-box">
+                            <div class="example-label">Issues:</div>
+                            5
+                        </div>
+                        <div class="example-box">
+                            <div class="example-label">Consistency Score:</div>
+                            0.85
+                        </div>
+                        
+                        <h4>Important Notes:</h4>
+                        <ul>
+                            <li>All counts must be non-negative integers</li>
+                            <li>Consistency score must be between 0.0 and 1.0 (e.g., 0.85 means 85% consistency)</li>
+                            <li>Metrics are automatically associated with your GitHub ID</li>
+                            <li>You can update metrics by saving again with the same repository ID</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="metrics-repo-id">Repository ID:</label>
+                    <input type="text" id="metrics-repo-id" placeholder="e.g., 507f1f77bcf86cd799439011 (get from mentor)">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="metrics-commits">Commits:</label>
+                        <input type="number" id="metrics-commits" placeholder="e.g., 50" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="metrics-prs">Pull Requests:</label>
+                        <input type="number" id="metrics-prs" placeholder="e.g., 10" min="0">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="metrics-issues">Issues:</label>
+                        <input type="number" id="metrics-issues" placeholder="e.g., 5" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="metrics-consistency">Consistency Score (0.0 - 1.0):</label>
+                        <input type="number" id="metrics-consistency" placeholder="e.g., 0.85 (85% consistency)" min="0" max="1" step="0.01">
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="saveMetrics()">Save Metrics</button>
+
+                <!-- Query Editor for saveContributionMetrics -->
+                <div class="query-editor hidden" id="query-editor-saveContributionMetrics">
+                    <div class="query-editor-header">
+                        <h4>GraphQL Mutation: saveContributionMetrics</h4>
+                        <div class="query-editor-controls">
+                            <button class="btn-reset" onclick="resetQuery('saveContributionMetrics')">Reset to Default</button>
+                            <button class="btn-toggle" onclick="toggleQueryEditor('saveContributionMetrics')">Hide Query</button>
+                        </div>
+                    </div>
+                    <textarea id="query-text-saveContributionMetrics"></textarea>
+                    <p class="query-editor-info">Edit the mutation above. Changes will be used when you click "Save Metrics".</p>
+                </div>
+
+                <div style="margin-top: 10px;">
+                    <button class="btn-toggle" onclick="toggleQueryEditor('saveContributionMetrics')">Show/Edit saveContributionMetrics Mutation</button>
+                </div>
+            </div>
+
+            <!-- AI Feedback Generation Section -->
+            <div class="section" id="ai-feedback-section">
+                <h2>🤖 AI Feedback Generation</h2>
+
+                <!-- Help Section for AI Feedback -->
+                <div class="help-section">
+                    <div class="help-header" onclick="toggleHelp('feedback-help')">
+                        <h3>ℹ️ How to Generate AI Feedback</h3>
+                        <span class="help-toggle" id="feedback-help-toggle">−</span>
+                    </div>
+                    <div class="help-content" id="feedback-help">
+                        <h4>Step-by-Step Instructions:</h4>
+                        <ol>
+                            <li>Enter the <strong>Repository ID</strong></li>
+                            <li><strong>For Students:</strong> Leave Student GitHub ID empty (feedback will be for yourself)</li>
+                            <li><strong>For Mentors:</strong> Enter the Student GitHub ID to generate feedback for that student</li>
+                            <li>Click <strong>"Generate AI Feedback"</strong></li>
+                            <li>View the quality score, strengths, issues, and suggestions in the response</li>
+                        </ol>
+                        
+                        <h4>Role Requirements:</h4>
+                        <ul>
+                            <li><strong>STUDENT:</strong> Can generate feedback for themselves (Student GitHub ID not required)</li>
+                            <li><strong>MENTOR:</strong> Can generate feedback for any student (Student GitHub ID required)</li>
+                        </ul>
+                        
+                        <h4>Example Values:</h4>
+                        <div class="example-box">
+                            <div class="example-label">Repository ID:</div>
+                            507f1f77bcf86cd799439011
+                        </div>
+                        <div class="example-box">
+                            <div class="example-label">Student GitHub ID (for mentors):</div>
+                            12345678
+                        </div>
+                        
+                        <h4>Feedback Components:</h4>
+                        <ul>
+                            <li><strong>Quality Score:</strong> Overall quality rating (0.0 to 1.0)</li>
+                            <li><strong>Strengths:</strong> List of positive aspects of the contributions</li>
+                            <li><strong>Issues:</strong> List of areas that need improvement</li>
+                            <li><strong>Suggestions:</strong> Actionable recommendations for improvement</li>
+                        </ul>
+                        
+                        <h4>Important Notes:</h4>
+                        <ul>
+                            <li>AI feedback is generated based on contribution metrics and code analysis</li>
+                            <li>Mentors must specify which student to generate feedback for</li>
+                            <li>Students automatically get feedback for their own contributions</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="feedback-repo-id">Repository ID:</label>
+                    <input type="text" id="feedback-repo-id" placeholder="e.g., 507f1f77bcf86cd799439011">
+                </div>
+
+                <div class="form-group">
+                    <label for="feedback-student-id">Student GitHub ID (Required for mentors):</label>
+                    <input type="text" id="feedback-student-id" placeholder="e.g., 12345678 (leave empty if you're a student)">
+                    <p style="font-size: 12px; color: #666; margin-top: 5px;">Leave empty if you're a student generating feedback for yourself</p>
+                </div>
+
+                <button class="btn-primary" onclick="generateAIFeedback()">Generate AI Feedback</button>
+
+                <!-- Query Editor for generateAIFeedback -->
+                <div class="query-editor hidden" id="query-editor-generateAIFeedback">
+                    <div class="query-editor-header">
+                        <h4>GraphQL Mutation: generateAIFeedback</h4>
+                        <div class="query-editor-controls">
+                            <button class="btn-reset" onclick="resetQuery('generateAIFeedback')">Reset to Default</button>
+                            <button class="btn-toggle" onclick="toggleQueryEditor('generateAIFeedback')">Hide Query</button>
+                        </div>
+                    </div>
+                    <textarea id="query-text-generateAIFeedback"></textarea>
+                    <p class="query-editor-info">Edit the mutation above. Changes will be used when you click "Generate AI Feedback".</p>
+                </div>
+
+                <div style="margin-top: 10px;">
+                    <button class="btn-toggle" onclick="toggleQueryEditor('generateAIFeedback')">Show/Edit generateAIFeedback Mutation</button>
+                </div>
+            </div>
+
+            <!-- Candidate Search Section -->
+            <div class="section" id="candidate-search-section">
+                <h2>🎯 Candidate Search</h2>
+
+                <!-- Help Section for Candidate Search -->
+                <div class="help-section">
+                    <div class="help-header" onclick="toggleHelp('search-help')">
+                        <h3>ℹ️ How to Search for Candidates</h3>
+                        <span class="help-toggle" id="search-help-toggle">−</span>
+                    </div>
+                    <div class="help-content" id="search-help">
+                        <h4>Step-by-Step Instructions:</h4>
+                        <ol>
+                            <li>Enter a <strong>job description</strong> in the text area</li>
+                            <li>Include specific skills, technologies, and requirements</li>
+                            <li>Click <strong>"Find Candidates"</strong></li>
+                            <li>View matching candidates with their match scores and verified skills</li>
+                        </ol>
+                        
+                        <h4>Role Requirements:</h4>
+                        <p>Available to all authenticated users (both MENTOR and STUDENT)</p>
+                        
+                        <h4>Example Job Description:</h4>
+                        <div class="example-box">
+                            <div class="example-label">Job Description:</div>
+                            Looking for a Python developer with FastAPI experience, strong database skills (PostgreSQL, MongoDB), 
+                            and knowledge of GraphQL. Must have experience with REST APIs, authentication systems, and cloud deployment. 
+                            Bonus points for Docker and CI/CD experience.
+                        </div>
+                        
+                        <h4>How It Works:</h4>
+                        <ul>
+                            <li>The system analyzes the job description to extract required skills</li>
+                            <li>It matches students based on their verified skills from contribution history</li>
+                            <li>Each candidate receives a match score (0.0 to 1.0)</li>
+                            <li>Results are sorted by match score (highest first)</li>
+                        </ul>
+                        
+                        <h4>Result Fields:</h4>
+                        <ul>
+                            <li><strong>Username:</strong> Student's GitHub username</li>
+                            <li><strong>Email:</strong> Student's contact email</li>
+                            <li><strong>Match Score:</strong> How well they match the job (0.0 to 1.0)</li>
+                            <li><strong>Verified Skills:</strong> List of skills verified through their contributions</li>
+                        </ul>
+                        
+                        <h4>Important Notes:</h4>
+                        <ul>
+                            <li>Be specific in your job description for better matches</li>
+                            <li>Include both required and preferred skills</li>
+                            <li>Skills are verified based on actual code contributions and metrics</li>
+                            <li>If no candidates match, try broadening your search criteria</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="job-description">Job Description:</label>
+                    <textarea id="job-description" placeholder="e.g., Looking for a Python developer with FastAPI experience, strong database skills (PostgreSQL, MongoDB), and knowledge of GraphQL. Must have experience with REST APIs and authentication systems..."></textarea>
+                </div>
+
+                <button class="btn-primary" onclick="findCandidates()">Find Candidates</button>
+
+                <!-- Query Editor for findCandidates -->
+                <div class="query-editor hidden" id="query-editor-findCandidates">
+                    <div class="query-editor-header">
+                        <h4>GraphQL Query: findCandidates</h4>
+                        <div class="query-editor-controls">
+                            <button class="btn-reset" onclick="resetQuery('findCandidates')">Reset to Default</button>
+                            <button class="btn-toggle" onclick="toggleQueryEditor('findCandidates')">Hide Query</button>
+                        </div>
+                    </div>
+                    <textarea id="query-text-findCandidates"></textarea>
+                    <p class="query-editor-info">Edit the query above. Changes will be used when you click "Find Candidates".</p>
+                </div>
+
+                <div style="margin-top: 10px;">
+                    <button class="btn-toggle" onclick="toggleQueryEditor('findCandidates')">Show/Edit findCandidates Query</button>
+                </div>
+            </div>
+
+            <!-- Response Display Section -->
+            <div class="section" id="response-section">
+                <h2>📋 Response / Results</h2>
+
+                <div class="loading-spinner" id="loading-spinner">
+                    <div class="spinner"></div>
+                    <p class="loading-text" id="loading-text">Loading...</p>
+                </div>
+
+                <button class="btn-secondary" onclick="clearResponse()">Clear Results</button>
+
+                <div class="response-area" id="response-area">
+                    No results yet. Execute an operation to see the response here.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // RealAuth Class - GitHub OAuth Authentication
+        // ============================================
+        class RealAuth {
+            constructor() {
+                this.tokenKey = 'auth_token';
+                this.userKey = 'current_user';
+            }
+
+            // Get the backend URL from configuration
+            getBackendUrl() {
+                return localStorage.getItem('mock_backend_url') || 'http://localhost:8000';
+            }
+
+            // Redirect to GitHub OAuth login
+            loginWithGitHub() {
+                const backendUrl = this.getBackendUrl();
+                const loginUrl = `${backendUrl}/auth/github/login`;
+                
+                // Store the current URL to return to after OAuth
+                localStorage.setItem('oauth_return_url', window.location.href);
+                
+                // Redirect to backend OAuth endpoint
+                window.location.href = loginUrl;
+            }
+
+            // Handle OAuth callback and extract JWT token
+            async handleOAuthCallback() {
+                const urlParams = new URLSearchParams(window.location.search);
+                
+                // Check for token in URL parameters
+                const token = urlParams.get('token');
+                const error = urlParams.get('error');
+
+                if (error) {
+                    console.error('OAuth error:', error);
+                    this.displayError(`OAuth authentication failed: ${error}`);
+                    // Clean up URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    return false;
+                }
+
+                if (token) {
+                    // Store the token
+                    this.setToken(token);
+                    
+                    // Clean up URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    
+                    // Get user profile
+                    await this.getCurrentUser();
+                    
+                    return true;
+                }
+
+                return false;
+            }
+
+            // Get current user profile from backend
+            async getCurrentUser() {
+                const token = this.getToken();
+                if (!token) {
+                    console.log('No token available');
+                    return null;
+                }
+
+                try {
+                    const backendUrl = this.getBackendUrl();
+                    const response = await fetch(`${backendUrl}/auth/me`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            // Token is invalid, clear it
+                            this.logout();
+                            throw new Error('Token expired or invalid');
+                        }
+                        throw new Error(`Failed to get user profile: ${response.status}`);
+                    }
+
+                    const userData = await response.json();
+                    
+                    // Store user data
+                    localStorage.setItem(this.userKey, JSON.stringify(userData));
+                    
+                    // Update UI
+                    if (window.uiManager) {
+                        window.uiManager.updateAuthUI(userData);
+                    }
+                    
+                    return userData;
+                } catch (error) {
+                    console.error('Error getting current user:', error);
+                    this.displayError(error.message);
+                    return null;
+                }
+            }
+
+            // Logout and clear state
+            logout() {
+                // Clear localStorage
+                localStorage.removeItem(this.tokenKey);
+                localStorage.removeItem(this.userKey);
+                
+                // Update UI
+                if (window.uiManager) {
+                    window.uiManager.updateAuthUI(null);
+                }
+                
+                console.log('User logged out');
+            }
+
+            // Get stored JWT token
+            getToken() {
+                return localStorage.getItem(this.tokenKey);
+            }
+
+            // Store JWT token
+            setToken(token) {
+                localStorage.setItem(this.tokenKey, token);
+            }
+
+            // Check if user has a specific role
+            hasRole(role) {
+                const userJson = localStorage.getItem(this.userKey);
+                if (!userJson) return false;
+                
+                try {
+                    const user = JSON.parse(userJson);
+                    return user.role === role;
+                } catch (error) {
+                    console.error('Error parsing user data:', error);
+                    return false;
+                }
+            }
+
+            // Get current user from localStorage
+            getCurrentUserFromStorage() {
+                const userJson = localStorage.getItem(this.userKey);
+                if (!userJson) return null;
+                
+                try {
+                    return JSON.parse(userJson);
+                } catch (error) {
+                    console.error('Error parsing user data:', error);
+                    return null;
+                }
+            }
+
+            // Display error message
+            displayError(message) {
+                if (window.uiManager) {
+                    window.uiManager.displayResponse({ error: message }, true);
+                } else {
+                    alert(`Error: ${message}`);
+                }
+            }
+        }
+
+        // ============================================
+        // GraphQLClient Class - GraphQL API Communication
+        // ============================================
+        class GraphQLClient {
+            constructor(baseUrl, getToken) {
+                this.baseUrl = baseUrl;
+                this.getToken = getToken;
+                this.graphqlEndpoint = '/graphql';
+                
+                // Store custom queries in memory (not persisted)
+                this.customQueries = {};
+                
+                // Define default queries
+                this.defaultQueries = {
+                    getMe: `
+                    query GetMe {
+                        getMe {
+                            id
+                            username
+                            email
+                            githubId
+                            role
+                            isEnrolled
+                            enrolledBy
+                            createdAt
+                        }
+                    }`,
+                    getRepositories: `
+                    query GetRepositories {
+                        getRepositories {
+                            id
+                            name
+                            url
+                            createdBy
+                            createdAt
+                        }
+                    }`,
+                    getMyContributionMetrics: `
+                    query GetMyContributionMetrics {
+                        getMyContributionMetrics {
+                            id
+                            repositoryId
+                            studentGithubId
+                            commitCount
+                            prCount
+                            issueCount
+                            consistencyScore
+                            createdAt
+                            updatedAt
+                        }
+                    }`,
+                    getAllContributionMetrics: `
+                    query GetAllContributionMetrics($repoId: String!) {
+                        getAllContributionMetrics(repoId: $repoId) {
+                            id
+                            repositoryId
+                            studentGithubId
+                            commitCount
+                            prCount
+                            issueCount
+                            consistencyScore
+                            createdAt
+                            updatedAt
+                        }
+                    }`,
+                    getMyAIFeedback: `
+                    query GetMyAIFeedback($repoId: String) {
+                        getMyAIFeedback(repoId: $repoId) {
+                            id
+                            repositoryId
+                            studentGithubId
+                            qualityScore
+                            strengths
+                            issues
+                            suggestions
+                            createdAt
+                        }
+                    }`,
+                    findCandidates: `
+                    query FindCandidates($jobDescription: String!) {
+                        findCandidates(jobDescription: $jobDescription) {
+                            username
+                            email
+                            matchScore
+                            verifiedSkills
+                        }
+                    }`,
+                    enrollStudent: `
+                    mutation EnrollStudent($input: EnrollStudentInput!) {
+                        enrollStudent(input: $input) {
+                            id
+                            username
+                            email
+                            githubId
+                            role
+                            isEnrolled
+                            enrolledBy
+                            createdAt
+                        }
+                    }`,
+                    createRepository: `
+                    mutation CreateRepository($input: CreateRepositoryInput!) {
+                        createRepository(input: $input) {
+                            id
+                            name
+                            url
+                            createdBy
+                            createdAt
+                        }
+                    }`,
+                    saveContributionMetrics: `
+                    mutation SaveContributionMetrics($input: SaveContributionMetricsInput!) {
+                        saveContributionMetrics(input: $input) {
+                            id
+                            repositoryId
+                            studentGithubId
+                            commitCount
+                            prCount
+                            issueCount
+                            consistencyScore
+                            createdAt
+                            updatedAt
+                        }
+                    }`,
+                    generateAIFeedback: `
+                    mutation GenerateAIFeedback($input: GenerateAIFeedbackInput!) {
+                        generateAIFeedback(input: $input) {
+                            id
+                            repositoryId
+                            studentGithubId
+                            qualityScore
+                            strengths
+                            issues
+                            suggestions
+                            createdAt
+                        }
+                    }`,
+                    getEnrolledStudents: `
+                    query GetEnrolledStudents {
+                        getEnrolledStudents {
+                            id
+                            username
+                            email
+                            githubId
+                            role
+                            isEnrolled
+                            enrolledBy
+                            createdAt
+                        }
+                    }`
+                };
+            }
+            
+            // Get query (custom or default)
+            getQuery(queryName) {
+                return this.customQueries[queryName] || this.defaultQueries[queryName];
+            }
+            
+            // Set custom query
+            setCustomQuery(queryName, queryString) {
+                this.customQueries[queryName] = queryString;
+            }
+            
+            // Reset query to default
+            resetQuery(queryName) {
+                delete this.customQueries[queryName];
+            }
+            
+            // Check if query is customized
+            isCustomQuery(queryName) {
+                return this.customQueries.hasOwnProperty(queryName);
+            }
+
+            // Get the full GraphQL URL
+            getGraphQLUrl() {
+                const base = typeof this.baseUrl === 'function' ? this.baseUrl() : this.baseUrl;
+                return `${base}${this.graphqlEndpoint}`;
+            }
+
+            // Execute a GraphQL query
+            async query(queryString, variables = {}) {
+                try {
+                    const token = this.getToken();
+                    const headers = {
+                        'Content-Type': 'application/json'
+                    };
+
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+
+                    const response = await fetch(this.getGraphQLUrl(), {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({
+                            query: queryString,
+                            variables: variables
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+
+                    // Check for GraphQL errors
+                    if (result.errors) {
+                        throw new Error(`GraphQL error: ${JSON.stringify(result.errors)}`);
+                    }
+
+                    return result;
+                } catch (error) {
+                    console.error('GraphQL query error:', error);
+                    throw error;
+                }
+            }
+
+            // Execute a GraphQL mutation
+            async mutate(mutationString, variables = {}) {
+                try {
+                    const token = this.getToken();
+                    const headers = {
+                        'Content-Type': 'application/json'
+                    };
+
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+
+                    const response = await fetch(this.getGraphQLUrl(), {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({
+                            query: mutationString,
+                            variables: variables
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+
+                    // Check for GraphQL errors
+                    if (result.errors) {
+                        throw new Error(`GraphQL error: ${JSON.stringify(result.errors)}`);
+                    }
+
+                    return result;
+                } catch (error) {
+                    console.error('GraphQL mutation error:', error);
+                    throw error;
+                }
+            }
+
+            // ============================================
+            // Predefined Query Methods
+            // ============================================
+
+            // Get current user profile
+            async getMe() {
+                const queryString = this.getQuery('getMe');
+                return await this.query(queryString);
+            }
+
+            // Get all repositories
+            async getRepositories() {
+                const queryString = this.getQuery('getRepositories');
+                return await this.query(queryString);
+            }
+
+            // Get my contribution metrics (student only)
+            async getMyContributionMetrics() {
+                const queryString = this.getQuery('getMyContributionMetrics');
+                return await this.query(queryString);
+            }
+
+            // Get all contribution metrics for a repository (mentor only)
+            async getAllContributionMetrics(repoId) {
+                const queryString = this.getQuery('getAllContributionMetrics');
+                return await this.query(queryString, { repoId });
+            }
+
+            // Get my AI feedback
+            async getMyAIFeedback(repoId = null) {
+                const queryString = this.getQuery('getMyAIFeedback');
+                return await this.query(queryString, { repoId });
+            }
+
+            // Find candidates by job description
+            async findCandidates(jobDescription) {
+                const queryString = this.getQuery('findCandidates');
+                return await this.query(queryString, { jobDescription });
+            }
+
+            // ============================================
+            // Predefined Mutation Methods
+            // ============================================
+
+            // Enroll a student (mentor only)
+            async enrollStudent(username, email) {
+                const mutationString = this.getQuery('enrollStudent');
+                return await this.mutate(mutationString, {
+                    input: { username, email }
+                });
+            }
+
+            // Create a repository (mentor only)
+            async createRepository(repoName, repoUrl) {
+                const mutationString = this.getQuery('createRepository');
+                return await this.mutate(mutationString, {
+                    input: { name: repoName, url: repoUrl }
+                });
+            }
+
+            // Save contribution metrics (student only)
+            async saveContributionMetrics(repoId, metrics) {
+                const mutationString = this.getQuery('saveContributionMetrics');
+                return await this.mutate(mutationString, {
+                    input: {
+                        repositoryId: repoId,
+                        commitCount: metrics.commitCount,
+                        prCount: metrics.prCount,
+                        issueCount: metrics.issueCount,
+                        consistencyScore: metrics.consistencyScore
+                    }
+                });
+            }
+
+            // Generate AI feedback
+            async generateAIFeedback(repoId, studentGithubId = null) {
+                const mutationString = this.getQuery('generateAIFeedback');
+                
+                const input = { repositoryId: repoId };
+                if (studentGithubId) {
+                    input.studentGithubId = studentGithubId;
+                }
+                
+                return await this.mutate(mutationString, { input });
+            }
+
+            // Get enrolled students (mentor only)
+            async getEnrolledStudents() {
+                // Try the proper query first
+                try {
+                    const queryString = this.getQuery('getEnrolledStudents');
+                    return await this.query(queryString);
+                } catch (error) {
+                    console.error('getEnrolledStudents query not available, using fallback');
+                    // Return empty result if query doesn't exist
+                    return { data: { getEnrolledStudents: [] } };
+                }
+            }
+        }
+
+        // ============================================
+        // RESTClient Class - REST API Communication
+        // ============================================
+        class RESTClient {
+            constructor(baseUrl, getToken) {
+                this.baseUrl = baseUrl;
+                this.getToken = getToken;
+            }
+
+            // Get the full backend URL
+            getBackendUrl() {
+                return typeof this.baseUrl === 'function' ? this.baseUrl() : this.baseUrl;
+            }
+
+            // Execute a GET request
+            async get(endpoint) {
+                try {
+                    const token = this.getToken();
+                    const headers = {
+                        'Content-Type': 'application/json'
+                    };
+
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+
+                    const url = `${this.getBackendUrl()}${endpoint}`;
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: headers
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    return result;
+                } catch (error) {
+                    console.error('REST GET error:', error);
+                    throw error;
+                }
+            }
+
+            // Execute a POST request
+            async post(endpoint, body = {}) {
+                try {
+                    const token = this.getToken();
+                    const headers = {
+                        'Content-Type': 'application/json'
+                    };
+
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+
+                    const url = `${this.getBackendUrl()}${endpoint}`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(body)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    return result;
+                } catch (error) {
+                    console.error('REST POST error:', error);
+                    throw error;
+                }
+            }
+
+            // ============================================
+            // Specific REST Endpoint Methods
+            // ============================================
+
+            // Health check endpoint
+            async healthCheck() {
+                return await this.get('/health');
+            }
+
+            // Get authenticated user from /auth/me endpoint
+            async getAuthMe() {
+                return await this.get('/auth/me');
+            }
+        }
+
+        // ============================================
+        // UIManager Class - DOM Manipulation
+        // ============================================
+        class UIManager {
+            constructor() {
+                this.responseArea = document.getElementById('response-area');
+                this.loadingSpinner = document.getElementById('loading-spinner');
+            }
+
+            // Update authentication UI
+            updateAuthUI(user) {
+                const authStatusText = document.getElementById('auth-status-text');
+                const userInfo = document.getElementById('user-info');
+                const tokenDisplayGroup = document.getElementById('token-display-group');
+                
+                if (user) {
+                    // User is logged in
+                    authStatusText.textContent = 'Logged in';
+                    authStatusText.style.color = '#4CAF50';
+                    
+                    // Show user info
+                    document.getElementById('user-username').textContent = user.username || '-';
+                    document.getElementById('user-role').textContent = user.role || '-';
+                    document.getElementById('user-email').textContent = user.email || '-';
+                    document.getElementById('user-github-id').textContent = user.githubId || user.github_id || '-';
+                    
+                    userInfo.classList.remove('hidden');
+                    
+                    // Show token
+                    const token = window.realAuth.getToken();
+                    document.getElementById('current-token').value = token || '';
+                    tokenDisplayGroup.classList.remove('hidden');
+                    
+                    // Check token expiration and display warning if needed
+                    this.checkTokenExpiration(token);
+                    
+                    // Update role-based UI
+                    this.updateRoleBasedUI(user.role);
+                } else {
+                    // User is logged out
+                    authStatusText.textContent = 'Not logged in';
+                    authStatusText.style.color = '#666';
+                    
+                    userInfo.classList.add('hidden');
+                    tokenDisplayGroup.classList.add('hidden');
+                    
+                    // Clear any token expiration warnings
+                    this.clearTokenExpirationWarning();
+                    
+                    // Hide role-based sections
+                    this.updateRoleBasedUI(null);
+                }
+            }
+
+            // Show/hide sections based on role
+            updateRoleBasedUI(role) {
+                const enrollmentSection = document.getElementById('enrollment-section');
+                const repositorySection = document.getElementById('repository-section');
+                const metricsSection = document.getElementById('metrics-section');
+                const mentorQueries = document.getElementById('mentor-queries');
+                
+                if (role === 'MENTOR') {
+                    enrollmentSection.classList.remove('hidden');
+                    repositorySection.classList.remove('hidden');
+                    metricsSection.classList.add('hidden');
+                    mentorQueries.classList.remove('hidden');
+                } else if (role === 'STUDENT') {
+                    enrollmentSection.classList.add('hidden');
+                    repositorySection.classList.add('hidden');
+                    metricsSection.classList.remove('hidden');
+                    mentorQueries.classList.add('hidden');
+                } else {
+                    // Not logged in
+                    enrollmentSection.classList.add('hidden');
+                    repositorySection.classList.add('hidden');
+                    metricsSection.classList.add('hidden');
+                    mentorQueries.classList.add('hidden');
+                }
+            }
+
+            // Display API response with proper formatting
+            displayResponse(data, isError = false) {
+                this.hideLoading();
+                
+                // Reset classes
+                this.responseArea.className = 'response-area';
+                
+                // Apply error or success styling
+                if (isError) {
+                    this.responseArea.classList.add('error');
+                } else {
+                    this.responseArea.classList.add('success');
+                }
+                
+                // Format the response
+                if (typeof data === 'string') {
+                    this.responseArea.textContent = data;
+                } else {
+                    // Format JSON with proper indentation (2 spaces)
+                    this.responseArea.textContent = JSON.stringify(data, null, 2);
+                }
+            }
+
+            // Clear response area
+            clearResponse() {
+                this.responseArea.textContent = 'No results yet. Execute an operation to see the response here.';
+                this.responseArea.className = 'response-area';
+            }
+
+            // Show loading state with custom message
+            showLoading(message = 'Loading...') {
+                document.getElementById('loading-text').textContent = message;
+                this.loadingSpinner.classList.add('active');
+            }
+
+            // Hide loading state
+            hideLoading() {
+                this.loadingSpinner.classList.remove('active');
+            }
+
+            // Display enrolled students list
+            displayEnrolledStudents(students) {
+                const studentsContainer = document.getElementById('students-container');
+                
+                if (!students || students.length === 0) {
+                    studentsContainer.innerHTML = '<p style="color: #666; font-style: italic;">No students enrolled yet.</p>';
+                    return;
+                }
+                
+                // Build HTML for student list
+                let html = '';
+                students.forEach(student => {
+                    html += `
+                        <div class="student-item">
+                            <p><strong>${student.username}</strong> (${student.githubId || student.github_id || 'N/A'})</p>
+                            <p>Email: ${student.email}</p>
+                            <p class="status">✓ Can login via GitHub OAuth</p>
+                        </div>
+                    `;
+                });
+                
+                studentsContainer.innerHTML = html;
+            }
+
+            // Check token expiration and display warning if needed
+            checkTokenExpiration(token) {
+                if (!token) {
+                    this.clearTokenExpirationWarning();
+                    return;
+                }
+
+                try {
+                    // Decode JWT token (base64 decode the payload)
+                    const parts = token.split('.');
+                    if (parts.length !== 3) {
+                        // Invalid token format
+                        this.clearTokenExpirationWarning();
+                        return;
+                    }
+
+                    // Decode the payload (second part)
+                    const payload = JSON.parse(atob(parts[1]));
+                    
+                    // Check if token has expiration time
+                    if (!payload.exp) {
+                        // No expiration time in token
+                        this.clearTokenExpirationWarning();
+                        return;
+                    }
+
+                    // Convert exp (seconds since epoch) to milliseconds
+                    const expirationTime = payload.exp * 1000;
+                    const currentTime = Date.now();
+                    const timeUntilExpiration = expirationTime - currentTime;
+
+                    // Show warning if token expires within 5 minutes (300000 ms)
+                    if (timeUntilExpiration < 300000 && timeUntilExpiration > 0) {
+                        const minutesLeft = Math.floor(timeUntilExpiration / 60000);
+                        const secondsLeft = Math.floor((timeUntilExpiration % 60000) / 1000);
+                        
+                        this.showTokenExpirationWarning(
+                            `Token will expire in ${minutesLeft} minute(s) and ${secondsLeft} second(s). Please re-authenticate soon.`
+                        );
+                    } else if (timeUntilExpiration <= 0) {
+                        // Token has already expired
+                        this.showTokenExpirationWarning(
+                            'Token has expired. Please login again to continue using the application.'
+                        );
+                    } else {
+                        // Token is valid and not expiring soon
+                        this.clearTokenExpirationWarning();
+                    }
+                } catch (error) {
+                    console.error('Error decoding token:', error);
+                    // If we can't decode the token, don't show a warning
+                    this.clearTokenExpirationWarning();
+                }
+            }
+
+            // Show token expiration warning
+            showTokenExpirationWarning(message) {
+                const warningDiv = document.getElementById('token-expiration-warning');
+                const messageP = document.getElementById('token-expiration-message');
+                
+                if (warningDiv && messageP) {
+                    messageP.textContent = message;
+                    warningDiv.classList.remove('hidden');
+                }
+            }
+
+            // Clear token expiration warning
+            clearTokenExpirationWarning() {
+                const warningDiv = document.getElementById('token-expiration-warning');
+                
+                if (warningDiv) {
+                    warningDiv.classList.add('hidden');
+                }
+            }
+
+            // Start automatic token monitoring
+            startTokenMonitoring() {
+                // Check token expiration every 10 seconds
+                this.tokenMonitoringInterval = setInterval(() => {
+                    const token = window.realAuth ? window.realAuth.getToken() : null;
+                    if (token) {
+                        // Update token display automatically
+                        const currentTokenTextarea = document.getElementById('current-token');
+                        if (currentTokenTextarea) {
+                            currentTokenTextarea.value = token;
+                        }
+                        
+                        // Check expiration automatically
+                        this.checkTokenExpiration(token);
+                    }
+                }, 10000); // Check every 10 seconds
+            }
+
+            // Stop automatic token monitoring
+            stopTokenMonitoring() {
+                if (this.tokenMonitoringInterval) {
+                    clearInterval(this.tokenMonitoringInterval);
+                    this.tokenMonitoringInterval = null;
+                }
+            }
+        }
+
+        // ============================================
+        // Global instances
+        // ============================================
+        let realAuth;
+        let uiManager;
+        let graphqlClient;
+        let restClient;
+
+        // ============================================
+        // Authentication Functions
+        // ============================================
+        function loginWithGitHub() {
+            realAuth.loginWithGitHub();
+        }
+
+        function copyToken() {
+            const tokenTextarea = document.getElementById('current-token');
+            tokenTextarea.select();
+            document.execCommand('copy');
+            
+            // Visual feedback
+            const originalText = tokenTextarea.value;
+            tokenTextarea.value = 'Token copied to clipboard!';
+            setTimeout(() => {
+                tokenTextarea.value = originalText;
+            }, 1000);
+        }
+
+        async function useManualToken() {
+            const manualTokenInput = document.getElementById('manual-token-input');
+            const token = manualTokenInput.value.trim();
+            
+            // Validate token is not empty
+            if (!token) {
+                uiManager.displayResponse({ error: 'Please enter a JWT token' }, true);
+                return;
+            }
+            
+            // Basic JWT format validation (should have 3 parts separated by dots)
+            const tokenParts = token.split('.');
+            if (tokenParts.length !== 3) {
+                uiManager.displayResponse({ 
+                    error: 'Invalid JWT token format', 
+                    details: 'JWT tokens should have 3 parts separated by dots (header.payload.signature)'
+                }, true);
+                return;
+            }
+            
+            try {
+                uiManager.showLoading('Validating token...');
+                
+                // Store the token
+                realAuth.setToken(token);
+                
+                // Try to get user profile with this token
+                const user = await realAuth.getCurrentUser();
+                
+                if (user) {
+                    // Success - token is valid
+                    uiManager.displayResponse({
+                        success: true,
+                        message: 'Token validated and applied successfully!',
+                        user: {
+                            username: user.username,
+                            role: user.role,
+                            email: user.email
+                        }
+                    }, false);
+                    
+                    // Clear the manual token input
+                    manualTokenInput.value = '';
+                } else {
+                    // Token validation failed
+                    uiManager.displayResponse({ 
+                        error: 'Token validation failed', 
+                        details: 'The token could not be validated with the backend'
+                    }, true);
+                }
+            } catch (error) {
+                console.error('Error using manual token:', error);
+                uiManager.displayResponse({ 
+                    error: 'Failed to validate token', 
+                    details: error.message 
+                }, true);
+            }
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                realAuth.logout();
+            }
+        }
+
+        function updateBackendUrl() {
+            const urlInput = document.getElementById('backend-url');
+            const statusSpan = document.getElementById('backend-url-status');
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                statusSpan.textContent = '❌ Please enter a backend URL';
+                statusSpan.style.color = '#f44336';
+                return;
+            }
+            
+            // Basic URL validation
+            try {
+                new URL(url);
+            } catch (error) {
+                statusSpan.textContent = '❌ Invalid URL format';
+                statusSpan.style.color = '#f44336';
+                return;
+            }
+            
+            // Store in localStorage
+            localStorage.setItem('mock_backend_url', url);
+            
+            // Show success feedback
+            statusSpan.textContent = '✓ Backend URL updated successfully!';
+            statusSpan.style.color = '#4CAF50';
+            
+            // Clear success message after 3 seconds
+            setTimeout(() => {
+                statusSpan.textContent = `Current: ${url}`;
+                statusSpan.style.color = '#667eea';
+            }, 3000);
+            
+            console.log('Backend URL updated to:', url);
+        }
+
+        async function performHealthCheck() {
+            try {
+                uiManager.showLoading('Checking backend health...');
+                
+                // Call the health check endpoint
+                const healthResult = await restClient.healthCheck();
+                
+                // Display success message with health check results
+                const successMessage = {
+                    success: true,
+                    message: 'Backend is healthy and responding!',
+                    health: healthResult,
+                    backendUrl: restClient.getBackendUrl()
+                };
+                
+                uiManager.displayResponse(successMessage, false);
+                
+                // Update status span
+                const statusSpan = document.getElementById('backend-url-status');
+                statusSpan.textContent = '✓ Backend is healthy';
+                statusSpan.style.color = '#4CAF50';
+                
+                // Clear status message after 3 seconds
+                setTimeout(() => {
+                    const currentUrl = localStorage.getItem('mock_backend_url') || 'http://localhost:8000';
+                    statusSpan.textContent = `Current: ${currentUrl}`;
+                    statusSpan.style.color = '#667eea';
+                }, 3000);
+            } catch (error) {
+                console.error('Health check failed:', error);
+                
+                // Display error message
+                uiManager.displayResponse({ 
+                    error: 'Backend health check failed', 
+                    details: error.message,
+                    backendUrl: restClient.getBackendUrl(),
+                    suggestion: 'Make sure the backend server is running and the URL is correct'
+                }, true);
+                
+                // Update status span
+                const statusSpan = document.getElementById('backend-url-status');
+                statusSpan.textContent = '❌ Backend unreachable';
+                statusSpan.style.color = '#f44336';
+            }
+        }
+
+        async function enrollStudent() {
+            const username = document.getElementById('enroll-username').value.trim();
+            const email = document.getElementById('enroll-email').value.trim();
+            
+            // Validate required fields
+            if (!username) {
+                uiManager.displayResponse({ error: 'GitHub username is required' }, true);
+                return;
+            }
+            
+            if (!email) {
+                uiManager.displayResponse({ error: 'Email is required' }, true);
+                return;
+            }
+            
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                uiManager.displayResponse({ error: 'Invalid email format' }, true);
+                return;
+            }
+            
+            try {
+                uiManager.showLoading('Enrolling student...');
+                
+                const result = await graphqlClient.enrollStudent(username, email);
+                
+                if (result.data && result.data.enrollStudent) {
+                    const student = result.data.enrollStudent;
+                    
+                    // Display success message with student info
+                    const successMessage = {
+                        success: true,
+                        message: 'Student enrolled successfully!',
+                        student: {
+                            username: student.username,
+                            email: student.email,
+                            githubId: student.githubId || student.github_id,
+                            role: student.role,
+                            enrolledBy: student.enrolledBy || student.enrolled_by
+                        },
+                        note: 'The student can now login via GitHub OAuth'
+                    };
+                    
+                    uiManager.displayResponse(successMessage, false);
+                    
+                    // Clear form fields
+                    document.getElementById('enroll-username').value = '';
+                    document.getElementById('enroll-email').value = '';
+                    
+                    // Refresh the enrolled students list
+                    await refreshEnrolledStudents();
+                } else {
+                    uiManager.displayResponse({ error: 'Unexpected response format', result }, true);
+                }
+            } catch (error) {
+                console.error('Error enrolling student:', error);
+                uiManager.displayResponse({ 
+                    error: 'Failed to enroll student', 
+                    details: error.message 
+                }, true);
+            }
+        }
+
+        async function refreshEnrolledStudents() {
+            try {
+                uiManager.showLoading('Fetching enrolled students...');
+                
+                const result = await graphqlClient.getEnrolledStudents();
+                
+                if (result.data && result.data.getEnrolledStudents) {
+                    const students = result.data.getEnrolledStudents;
+                    
+                    // Update the UI with the students list
+                    uiManager.displayEnrolledStudents(students);
+                    
+                    // Also display in response area
+                    uiManager.displayResponse({
+                        success: true,
+                        message: `Found ${students.length} enrolled student(s)`,
+                        students: students
+                    }, false);
+                } else {
+                    // No students or query not supported
+                    uiManager.displayEnrolledStudents([]);
+                    uiManager.displayResponse({
+                        message: 'No enrolled students found or query not supported by backend',
+                        note: 'The backend may need to implement the getEnrolledStudents query'
+                    }, false);
+                }
+            } catch (error) {
+                console.error('Error fetching enrolled students:', error);
+                uiManager.displayResponse({ 
+                    error: 'Failed to fetch enrolled students', 
+                    details: error.message,
+                    note: 'The backend may not support the getEnrolledStudents query yet'
+                }, true);
+            }
+        }
+
+        async function createRepository() {
+            const repoName = document.getElementById('repo-name').value.trim();
+            const repoUrl = document.getElementById('repo-url').value.trim();
+            
+            // Validate required fields
+            if (!repoName) {
+                uiManager.displayResponse({ error: 'Repository name is required' }, true);
+                return;
+            }
+            
+            if (!repoUrl) {
+                uiManager.displayResponse({ error: 'Repository URL is required' }, true);
+                return;
+            }
+            
+            // Validate URL format
+            const urlRegex = /^https?:\/\/.+/;
+            if (!urlRegex.test(repoUrl)) {
+                uiManager.displayResponse({ 
+                    error: 'Invalid repository URL format', 
+                    details: 'URL must start with http:// or https://'
+                }, true);
+                return;
+            }
+            
+            try {
+                uiManager.showLoading('Creating repository...');
+                
+                const result = await graphqlClient.createRepository(repoName, repoUrl);
+                
+                if (result.data && result.data.createRepository) {
+                    const repository = result.data.createRepository;
+                    
+                    // Display success message with repository info
+                    const successMessage = {
+                        success: true,
+                        message: 'Repository created successfully!',
+                        repository: {
+                            id: repository.id,
+                            name: repository.name,
+                            url: repository.url,
+                            createdBy: repository.createdBy || repository.created_by,
+                            createdAt: repository.createdAt || repository.created_at
+                        }
+                    };
+                    
+                    uiManager.displayResponse(successMessage, false);
+                    
+                    // Clear form fields
+                    document.getElementById('repo-name').value = '';
+                    document.getElementById('repo-url').value = '';
+                } else {
+                    uiManager.displayResponse({ error: 'Unexpected response format', result }, true);
+                }
+            } catch (error) {
+                console.error('Error creating repository:', error);
+                uiManager.displayResponse({ 
+                    error: 'Failed to create repository', 
+                    details: error.message 
+                }, true);
+            }
+        }
+
+        async function getMyProfile() {
+            try {
+                uiManager.showLoading('Fetching profile...');
+                
+                const result = await graphqlClient.getMe();
+                
+                if (result.data && result.data.getMe) {
+                    const profile = result.data.getMe;
+                    
+                    // Display success message with profile info
+                    const successMessage = {
+                        success: true,
+                        message: 'Profile retrieved successfully!',
+                        profile: {
+                            id: profile.id,
+                            username: profile.username,
+                            email: profile.email,
+                            githubId: profile.githubId || profile.github_id,
+                            role: profile.role,
+                            isEnrolled: profile.isEnrolled || profile.is_enrolled,
+                            enrolledBy: profile.enrolledBy || profile.enrolled_by,
+                            createdAt: profile.createdAt || profile.created_at
+                        }
+                    };
+                    
+                    uiManager.displayResponse(successMessage, false);
+                } else {
+                    uiManager.displayResponse({ error: 'Unexpected response format', result }, true);
+                }
+            } catch (error) {
+                console.error('Error fetching profile:', error);
+                uiManager.displayResponse({ 
+                    error: 'Failed to fetch profile', 
+                    details: error.message 
+                }, true);
+            }
+        }
+
+        async function getRepositories() {
+            try {
+                uiManager.showLoading('Fetching repositories...');
+                
+                const result = await graphqlClient.getRepositories();
+                
+                if (result.data && result.data.getRepositories) {
+                    const repositories = result.data.getRepositories;
+                    
+                    // Display success message with repositories
+                    const successMessage = {
+                        success: true,
+                        message: `Found ${repositories.length} repository(ies)`,
+                        repositories: repositories.map(r => ({
+                            id: r.id,
+                            name: r.name,
+                            url: r.url,
+                            createdBy: r.createdBy || r.created_by,
+                            createdAt: r.createdAt || r.created_at
+                        }))
+                    };
+                    
+                    uiManager.displayResponse(successMessage, false);
+                } else {
+                    uiManager.displayResponse({ error: 'Unexpected response format', result }, true);
+                }
+            } catch (error) {
+                console.error('Error fetching repositories:', error);
+                uiManager.displayResponse({ 
+                    error: 'Failed to fetch repositories', 
+                    details: error.message 
+                }, true);
+            }
+        }
+
+        async function getMyMetrics() {
+            try {
+                uiManager.showLoading('Fetching my contribution metrics...');
+                
+                const result = await graphqlClient.getMyContributionMetrics();
+                
+                if (result.data && result.data.getMyContributionMetrics) {
+                    const metrics = result.data.getMyContributionMetrics;
+                    
+                    // Display success message with metrics
+                    const successMessage = {
+                        success: true,
+                        message: `Found ${metrics.length} contribution metric(s)`,
+                        metrics: metrics.map(m => ({
+                            id: m.id,
+                            repositoryId: m.repositoryId || m.repository_id,
+                            studentGithubId: m.studentGithubId || m.student_github_id,
+                            commitCount: m.commitCount || m.commit_count,
+                            prCount: m.prCount || m.pr_count,
+                            issueCount: m.issueCount || m.issue_count,
+                            consistencyScore: m.consistencyScore || m.consistency_score,
+                            createdAt: m.createdAt || m.created_at,
+                            updatedAt: m.updatedAt || m.updated_at
+                        }))
+                    };
+                    
+                    uiManager.displayResponse(successMessage, false);
+                } else {
+                    uiManager.displayResponse({ error: 'Unexpected response format', result }, true);
+                }
+            } catch (error) {
+                console.error('Error fetching my contribution metrics:', error);
+                uiManager.displayResponse({ 
+                    error: 'Failed to fetch contribution metrics', 
+                    details: error.message 
+                }, true);
+            }
+        }
+
+        async function getMyAIFeedback() {
+            try {
+                uiManager.showLoading('Fetching my AI feedback...');
+                
+                const result = await graphqlClient.getMyAIFeedback();
+                
+                if (result.data && result.data.getMyAIFeedback) {
+                    const feedbackList = result.data.getMyAIFeedback;
+                    
+                    // Display success message with feedback
+                    const successMessage = {
+                        success: true,
+                        message: `Found ${feedbackList.length} AI feedback item(s)`,
+                        feedback: feedbackList.map(f => ({
+                            id: f.id,
+                            repositoryId: f.repositoryId || f.repository_id,
+                            studentGithubId: f.studentGithubId || f.student_github_id,
+                            qualityScore: f.qualityScore || f.quality_score,
+                            strengths: f.strengths,
+                            issues: f.issues,
+                            suggestions: f.suggestions,
+                            createdAt: f.createdAt || f.created_at
+                        }))
+                    };
+                    
+                    uiManager.displayResponse(successMessage, false);
+                } else {
+                    uiManager.displayResponse({ error: 'Unexpected response format', result }, true);
+                }
+            } catch (error) {
+                console.error('Error fetching my AI feedback:', error);
+                uiManager.displayResponse({ 
+                    error: 'Failed to fetch AI feedback', 
+                    details: error.message 
+                }, true);
+            }
+        }
+
+        async function getAllMetrics() {
+            const repoId = document.getElementById('mentor-repo-id').value.trim();
+            
+            // Validate required field
+            if (!repoId) {
+                uiManager.displayResponse({ error: 'Repository ID is required' }, true);
+                return;
+            }
+            
+            try {
+                uiManager.showLoading('Fetching all contribution metrics for repository...');
+                
+                const result = await graphqlClient.getAllContributionMetrics(repoId);
+                
+                if (result.data && result.data.getAllContributionMetrics) {
+                    const metrics = result.data.getAllContributionMetrics;
+                    
+                    // Display success message with all student metrics
+                    const successMessage = {
+                        success: true,
+                        message: `Found ${metrics.length} contribution metric(s) for repository ${repoId}`,
+                        repositoryId: repoId,
+                        metrics: metrics.map(m => ({
+                            id: m.id,
+                            studentGithubId: m.studentGithubId || m.student_github_id,
+                            commitCount: m.commitCount || m.commit_count,
+                            prCount: m.prCount || m.pr_count,
+                            issueCount: m.issueCount || m.issue_count,
+                            consistencyScore: m.consistencyScore || m.consistency_score,
+                            createdAt: m.createdAt || m.created_at,
+                            updatedAt: m.updatedAt || m.updated_at
+                        }))
+                    };
+                    
+                    uiManager.displayResponse(successMessage, false);
+                } else {
+                    uiManager.displayResponse({ error: 'Unexpected response format', result }, true);
+                }
+            } catch (error) {
+                console.error('Error fetching all contribution metrics:', error);
+                uiManager.displayResponse({ 
+                    error: 'Failed to fetch contribution metrics', 
+                    details: error.message 
+                }, true);
+            }
+        }
+
+        async function saveMetrics() {
+            const repoId = document.getElementById('metrics-repo-id').value.trim();
+            const commits = document.getElementById('metrics-commits').value.trim();
+            const prs = document.getElementById('metrics-prs').value.trim();
+            const issues = document.getElementById('metrics-issues').value.trim();
+            const consistency = document.getElementById('metrics-consistency').value.trim();
+            
+            // Validate required fields
+            if (!repoId) {
+                uiManager.displayResponse({ error: 'Repository ID is required' }, true);
+                return;
+            }
+            
+            if (!commits) {
+                uiManager.displayResponse({ error: 'Commit count is required' }, true);
+                return;
+            }
+            
+            if (!prs) {
+                uiManager.displayResponse({ error: 'Pull request count is required' }, true);
+                return;
+            }
+            
+            if (!issues) {
+                uiManager.displayResponse({ error: 'Issue count is required' }, true);
+                return;
+            }
+            
+            if (!consistency) {
+                uiManager.displayResponse({ error: 'Consistency score is required' }, true);
+                return;
+            }
+            
+            // Validate numeric fields
+            const commitCount = parseInt(commits, 10);
+            const prCount = parseInt(prs, 10);
+            const issueCount = parseInt(issues, 10);
+            const consistencyScore = parseFloat(consistency);
+            
+            if (isNaN(commitCount) || commitCount < 0) {
+                uiManager.displayResponse({ 
+                    error: 'Invalid commit count', 
+                    details: 'Commit count must be a non-negative number'
+                }, true);
+                return;
+            }
+            
+            if (isNaN(prCount) || prCount < 0) {
+                uiManager.displayResponse({ 
+                    error: 'Invalid pull request count', 
+                    details: 'Pull request count must be a non-negative number'
+                }, true);
+                return;
+            }
+            
+            if (isNaN(issueCount) || issueCount < 0) {
+                uiManager.displayResponse({ 
+                    error: 'Invalid issue count', 
+                    details: 'Issue count must be a non-negative number'
+                }, true);
+                return;
+            }
+            
+            if (isNaN(consistencyScore) || consistencyScore < 0.0 || consistencyScore > 1.0) {
+                uiManager.displayResponse({ 
+                    error: 'Invalid consistency score', 
+                    details: 'Consistency score must be a number between 0.0 and 1.0'
+                }, true);
+                return;
+            }
+            
+            try {
+                uiManager.showLoading('Saving contribution metrics...');
+                
+                const metrics = {
+                    commitCount: commitCount,
+                    prCount: prCount,
+                    issueCount: issueCount,
+                    consistencyScore: consistencyScore
+                };
+                
+                const result = await graphqlClient.saveContributionMetrics(repoId, metrics);
+                
+                if (result.data && result.data.saveContributionMetrics) {
+                    const savedMetrics = result.data.saveContributionMetrics;
+                    
+                    // Display success message with saved metrics info
+                    const successMessage = {
+                        success: true,
+                        message: 'Contribution metrics saved successfully!',
+                        metrics: {
+                            id: savedMetrics.id,
+                            repositoryId: savedMetrics.repositoryId || savedMetrics.repository_id,
+                            studentGithubId: savedMetrics.studentGithubId || savedMetrics.student_github_id,
+                            commitCount: savedMetrics.commitCount || savedMetrics.commit_count,
+                            prCount: savedMetrics.prCount || savedMetrics.pr_count,
+                            issueCount: savedMetrics.issueCount || savedMetrics.issue_count,
+                            consistencyScore: savedMetrics.consistencyScore || savedMetrics.consistency_score,
+                            createdAt: savedMetrics.createdAt || savedMetrics.created_at,
+                            updatedAt: savedMetrics.updatedAt || savedMetrics.updated_at
+                        }
+                    };
+                    
+                    uiManager.displayResponse(successMessage, false);
+                    
+                    // Clear form fields
+                    document.getElementById('metrics-repo-id').value = '';
+                    document.getElementById('metrics-commits').value = '';
+                    document.getElementById('metrics-prs').value = '';
+                    document.getElementById('metrics-issues').value = '';
+                    document.getElementById('metrics-consistency').value = '';
+                } else {
+                    uiManager.displayResponse({ error: 'Unexpected response format', result }, true);
+                }
+            } catch (error) {
+                console.error('Error saving contribution metrics:', error);
+                uiManager.displayResponse({ 
+                    error: 'Failed to save contribution metrics', 
+                    details: error.message 
+                }, true);
+            }
+        }
+
+        async function generateAIFeedback() {
+            const repoId = document.getElementById('feedback-repo-id').value.trim();
+            const studentGithubId = document.getElementById('feedback-student-id').value.trim();
+            
+            // Validate required field
+            if (!repoId) {
+                uiManager.displayResponse({ error: 'Repository ID is required' }, true);
+                return;
+            }
+            
+            // Check if user is a mentor and studentGithubId is required
+            const currentUser = realAuth.getCurrentUserFromStorage();
+            if (currentUser && currentUser.role === 'MENTOR' && !studentGithubId) {
+                uiManager.displayResponse({ 
+                    error: 'Student GitHub ID is required for mentors',
+                    details: 'Mentors must specify which student to generate feedback for'
+                }, true);
+                return;
+            }
+            
+            try {
+                uiManager.showLoading('Generating AI feedback...');
+                
+                // Pass studentGithubId only if provided
+                const result = await graphqlClient.generateAIFeedback(
+                    repoId, 
+                    studentGithubId || null
+                );
+                
+                if (result.data && result.data.generateAIFeedback) {
+                    const feedback = result.data.generateAIFeedback;
+                    
+                    // Display success message with AI feedback details
+                    const successMessage = {
+                        success: true,
+                        message: 'AI feedback generated successfully!',
+                        feedback: {
+                            id: feedback.id,
+                            repositoryId: feedback.repositoryId || feedback.repository_id,
+                            studentGithubId: feedback.studentGithubId || feedback.student_github_id,
+                            qualityScore: feedback.qualityScore || feedback.quality_score,
+                            strengths: feedback.strengths,
+                            issues: feedback.issues,
+                            suggestions: feedback.suggestions,
+                            createdAt: feedback.createdAt || feedback.created_at
+                        }
+                    };
+                    
+                    uiManager.displayResponse(successMessage, false);
+                    
+                    // Clear form fields
+                    document.getElementById('feedback-repo-id').value = '';
+                    document.getElementById('feedback-student-id').value = '';
+                } else {
+                    uiManager.displayResponse({ error: 'Unexpected response format', result }, true);
+                }
+            } catch (error) {
+                console.error('Error generating AI feedback:', error);
+                uiManager.displayResponse({ 
+                    error: 'Failed to generate AI feedback', 
+                    details: error.message 
+                }, true);
+            }
+        }
+
+        async function findCandidates() {
+            const jobDescription = document.getElementById('job-description').value.trim();
+            
+            // Validate required field
+            if (!jobDescription) {
+                uiManager.displayResponse({ error: 'Job description is required' }, true);
+                return;
+            }
+            
+            try {
+                uiManager.showLoading('Searching for candidates...');
+                
+                const result = await graphqlClient.findCandidates(jobDescription);
+                
+                if (result.data && result.data.findCandidates) {
+                    const candidates = result.data.findCandidates;
+                    
+                    // Check if no candidates found
+                    if (candidates.length === 0) {
+                        uiManager.displayResponse({
+                            success: true,
+                            message: 'No candidates found',
+                            details: 'No students match the provided job description'
+                        }, false);
+                        return;
+                    }
+                    
+                    // Display success message with candidate results
+                    const successMessage = {
+                        success: true,
+                        message: `Found ${candidates.length} candidate(s)`,
+                        candidates: candidates.map(c => ({
+                            username: c.username,
+                            email: c.email,
+                            matchScore: c.matchScore || c.match_score,
+                            verifiedSkills: c.verifiedSkills || c.verified_skills || []
+                        }))
+                    };
+                    
+                    uiManager.displayResponse(successMessage, false);
+                } else {
+                    uiManager.displayResponse({ error: 'Unexpected response format', result }, true);
+                }
+            } catch (error) {
+                console.error('Error finding candidates:', error);
+                uiManager.displayResponse({ 
+                    error: 'Failed to find candidates', 
+                    details: error.message 
+                }, true);
+            }
+        }
+
+        function clearResponse() {
+            const responseArea = document.getElementById('response-area');
+            responseArea.textContent = 'No results yet. Execute an operation to see the response here.';
+            responseArea.className = 'response-area';
+        }
+
+        // ============================================
+        // Query Editor Functions
+        // ============================================
+        
+        function toggleQueryEditor(queryName) {
+            const editorDiv = document.getElementById(`query-editor-${queryName}`);
+            const textarea = document.getElementById(`query-text-${queryName}`);
+            
+            if (editorDiv.classList.contains('hidden')) {
+                // Show the editor
+                editorDiv.classList.remove('hidden');
+                
+                // Load the current query (custom or default)
+                const currentQuery = graphqlClient.getQuery(queryName);
+                textarea.value = currentQuery.trim();
+                
+                // Update button text
+                const toggleButtons = document.querySelectorAll(`button[onclick="toggleQueryEditor('${queryName}')"]`);
+                toggleButtons.forEach(btn => {
+                    if (btn.textContent.includes('Show')) {
+                        btn.textContent = btn.textContent.replace('Show', 'Hide');
+                    }
+                });
+            } else {
+                // Hide the editor and save changes
+                const editedQuery = textarea.value.trim();
+                
+                // Only save if the query has been modified
+                if (editedQuery && editedQuery !== graphqlClient.defaultQueries[queryName].trim()) {
+                    graphqlClient.setCustomQuery(queryName, editedQuery);
+                    console.log(`Custom query saved for ${queryName}`);
+                } else if (editedQuery === graphqlClient.defaultQueries[queryName].trim()) {
+                    // If it matches the default, remove any custom version
+                    graphqlClient.resetQuery(queryName);
+                }
+                
+                editorDiv.classList.add('hidden');
+                
+                // Update button text
+                const toggleButtons = document.querySelectorAll(`button[onclick="toggleQueryEditor('${queryName}')"]`);
+                toggleButtons.forEach(btn => {
+                    if (btn.textContent.includes('Hide')) {
+                        btn.textContent = btn.textContent.replace('Hide', 'Show');
+                    }
+                });
+            }
+        }
+        
+        function resetQuery(queryName) {
+            // Reset to default query
+            graphqlClient.resetQuery(queryName);
+            
+            // Update the textarea with the default query
+            const textarea = document.getElementById(`query-text-${queryName}`);
+            if (textarea) {
+                textarea.value = graphqlClient.defaultQueries[queryName].trim();
+            }
+            
+            // Show feedback
+            uiManager.displayResponse({
+                success: true,
+                message: `Query "${queryName}" has been reset to default`,
+                query: graphqlClient.defaultQueries[queryName].trim()
+            }, false);
+            
+            console.log(`Query ${queryName} reset to default`);
+        }
+
+        // ============================================
+        // Help Section Toggle Function
+        // ============================================
+        function toggleHelp(helpId) {
+            const helpContent = document.getElementById(helpId);
+            const toggleIcon = document.getElementById(helpId + '-toggle');
+            
+            if (helpContent.classList.contains('collapsed')) {
+                helpContent.classList.remove('collapsed');
+                toggleIcon.textContent = '−';
+            } else {
+                helpContent.classList.add('collapsed');
+                toggleIcon.textContent = '+';
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Mock UI Testing Interface loaded');
+            
+            // Initialize global instances
+            realAuth = new RealAuth();
+            uiManager = new UIManager();
+            
+            // Initialize GraphQL client with backend URL getter and token getter
+            graphqlClient = new GraphQLClient(
+                () => localStorage.getItem('mock_backend_url') || 'http://localhost:8000',
+                () => realAuth.getToken()
+            );
+            
+            // Initialize REST client with backend URL getter and token getter
+            restClient = new RESTClient(
+                () => localStorage.getItem('mock_backend_url') || 'http://localhost:8000',
+                () => realAuth.getToken()
+            );
+            
+            // Make them globally accessible
+            window.realAuth = realAuth;
+            window.uiManager = uiManager;
+            window.graphqlClient = graphqlClient;
+            window.restClient = restClient;
+            
+            // Start automatic token monitoring
+            uiManager.startTokenMonitoring();
+            
+            // Load backend URL from localStorage
+            const savedBackendUrl = localStorage.getItem('mock_backend_url');
+            if (savedBackendUrl) {
+                document.getElementById('backend-url').value = savedBackendUrl;
+                // Display current URL prominently
+                const statusSpan = document.getElementById('backend-url-status');
+                statusSpan.textContent = `Current: ${savedBackendUrl}`;
+                statusSpan.style.color = '#667eea';
+            } else {
+                // Show default URL
+                const statusSpan = document.getElementById('backend-url-status');
+                statusSpan.textContent = 'Current: http://localhost:8000 (default)';
+                statusSpan.style.color = '#666';
+            }
+            
+            // Handle OAuth callback if present
+            const hasToken = await realAuth.handleOAuthCallback();
+            
+            // If no OAuth callback, try to restore session from localStorage
+            if (!hasToken) {
+                const token = realAuth.getToken();
+                if (token) {
+                    // Validate token by getting current user
+                    await realAuth.getCurrentUser();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -39,7 +39,7 @@ class ErrorResponse(BaseModel):
 
 
 # Create authentication router
-auth_router = APIRouter(prefix="/auth", tags=["authentication"])
+auth_router = APIRouter(tags=["authentication"])
 
 
 @auth_router.get("/github/login")
@@ -88,12 +88,13 @@ async def github_callback(
     state: Optional[str] = None,
     error: Optional[str] = None,
     error_description: Optional[str] = None
-) -> AuthResponse:
+) -> RedirectResponse:
     """
     GitHub OAuth callback endpoint with comprehensive error handling.
     
     Handles the OAuth callback from GitHub, exchanges code for token,
     fetches user profile, validates user, and issues JWT token.
+    Redirects back to the frontend with the token in the URL.
     
     Requirements 1.2: Exchange authorization code for access token
     Requirements 1.3: Fetch GitHub user profile
@@ -109,11 +110,20 @@ async def github_callback(
         error_description: Error description from GitHub
         
     Returns:
-        AuthResponse with JWT token and user information
+        RedirectResponse back to the frontend with token or error in URL
         
     Raises:
         HTTPException: Various HTTP errors based on failure type
     """
+    # Get frontend URL from configuration
+    from backend.config import get_settings
+    settings = get_settings()
+    
+    # Use configured frontend URL, or fall back to first CORS origin
+    frontend_url = settings.frontend_url
+    if not frontend_url:
+        frontend_url = settings.cors_origins_list[0] if settings.cors_origins_list else "http://localhost:3000"
+    
     try:
         logger.info("Processing GitHub OAuth callback")
         
@@ -121,18 +131,15 @@ async def github_callback(
         if error:
             error_msg = error_description or error
             logger.warning(f"GitHub OAuth error: {error_msg}")
-            raise ValidationError(
-                message=f"GitHub OAuth failed: {error_msg}",
-                details={"github_error": error, "description": error_description}
-            )
+            # Redirect back with error
+            redirect_url = f"{frontend_url}?error={error}&error_description={error_description or ''}"
+            return RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
         
         # Validate authorization code
         if not code:
             logger.warning("Missing authorization code in OAuth callback")
-            raise ValidationError(
-                message="Authorization code is required",
-                details={"missing_parameter": "code"}
-            )
+            redirect_url = f"{frontend_url}?error=missing_code&error_description=Authorization code is required"
+            return RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
         
         logger.info("Completing GitHub OAuth flow")
         
@@ -145,28 +152,37 @@ async def github_callback(
         auth_result = await auth_service.validate_and_authenticate_user(github_user)
         
         logger.info(f"User authentication successful: {github_user.login}")
-        return AuthResponse(**auth_result)
+        
+        # Redirect back to frontend with token
+        token = auth_result["access_token"]
+        redirect_url = f"{frontend_url}?token={token}"
+        return RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
         
     except ValidationError as e:
         log_error(e, {"endpoint": "/auth/github/callback", "code_present": bool(code)})
-        raise convert_to_http_exception(e)
+        redirect_url = f"{frontend_url}?error=validation_error&error_description={e.message}"
+        return RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
     except AuthorizationError as e:
         # This handles 403 Forbidden for non-enrolled students
         log_error(e, {"endpoint": "/auth/github/callback", "user": code})
-        raise convert_to_http_exception(e)
+        redirect_url = f"{frontend_url}?error=authorization_error&error_description={e.message}"
+        return RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
     except GitHubOAuthError as e:
         log_error(e, {"endpoint": "/auth/github/callback", "step": "oauth_flow"})
-        raise convert_to_http_exception(e)
+        redirect_url = f"{frontend_url}?error=github_oauth_error&error_description={e.message}"
+        return RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
     except AuthenticationError as e:
         log_error(e, {"endpoint": "/auth/github/callback", "step": "user_validation"})
-        raise convert_to_http_exception(e)
+        redirect_url = f"{frontend_url}?error=authentication_error&error_description={e.message}"
+        return RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
     except Exception as e:
-        error = AuthenticationError(
+        error_obj = AuthenticationError(
             message="Unexpected error during authentication",
             details={"original_error": str(e), "error_type": type(e).__name__}
         )
-        log_error(error, {"endpoint": "/auth/github/callback"})
-        raise convert_to_http_exception(error)
+        log_error(error_obj, {"endpoint": "/auth/github/callback"})
+        redirect_url = f"{frontend_url}?error=unexpected_error&error_description=Unexpected error during authentication"
+        return RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
 
 
 @auth_router.get("/me")

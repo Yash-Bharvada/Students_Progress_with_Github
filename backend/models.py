@@ -6,7 +6,7 @@ Defines data structures for users, repositories, metrics, and AI feedback.
 from datetime import datetime
 from typing import Optional, List
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from bson import ObjectId
 
 
@@ -35,6 +35,38 @@ class Role(str, Enum):
     STUDENT = "STUDENT"
 
 
+class SkillTag(BaseModel):
+    """Technical skill tag with confidence and evidence."""
+    
+    name: str = Field(..., description="Technical skill name (e.g., 'FastAPI')")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score 0-1")
+    evidence_file: str = Field(..., description="File path where skill was detected")
+    
+    class Config:
+        populate_by_name = True
+
+
+class UserSkillProfile(BaseModel):
+    """User skill profile with verified skills and semantic embedding."""
+    
+    verified_skills: List[SkillTag] = Field(default_factory=list, description="List of verified technical skills")
+    skill_embedding: Optional[List[float]] = Field(
+        default=None,
+        description="384-dimensional SentenceTransformers embedding vector"
+    )
+    last_scanned: Optional[datetime] = Field(default=None, description="Timestamp of last repository scan")
+    
+    @validator('skill_embedding')
+    def validate_embedding_dimensions(cls, v):
+        """Validate that embedding has exactly 384 dimensions."""
+        if v is not None and len(v) != 384:
+            raise ValueError("Embedding must be exactly 384 dimensions")
+        return v
+    
+    class Config:
+        populate_by_name = True
+
+
 class User(BaseModel):
     """User data model."""
     
@@ -49,9 +81,10 @@ class User(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow, alias="createdAt")
     updated_at: datetime = Field(default_factory=datetime.utcnow, alias="updatedAt")
     last_login: Optional[datetime] = Field(None, description="Last login timestamp", alias="lastLogin")
+    skill_profile: Optional[UserSkillProfile] = Field(None, description="User skill profile with verified skills and embedding")
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
@@ -67,7 +100,7 @@ class Repository(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow, alias="createdAt")
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
@@ -85,7 +118,7 @@ class ContributionMetrics(BaseModel):
     last_updated: datetime = Field(default_factory=datetime.utcnow, alias="lastUpdated")
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
@@ -103,6 +136,6 @@ class AIFeedback(BaseModel):
     generated_at: datetime = Field(default_factory=datetime.utcnow, alias="generatedAt")
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}

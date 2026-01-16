@@ -12,7 +12,7 @@ from bson import ObjectId
 
 from backend.models import User, Repository, ContributionMetrics, Role
 from backend.ai.feedback_engine import AIFeedbackEngine
-from backend.graphql.schema import (
+from backend.gql_api.schema import (
     User as GraphQLUser, 
     Repository as GraphQLRepository, 
     ContributionMetrics as GraphQLContributionMetrics,
@@ -22,9 +22,9 @@ from backend.graphql.schema import (
     SaveContributionMetricsInput,
     GenerateAIFeedbackInput
 )
-from backend.graphql.permissions import IsMentor, IsStudent, IsAuthenticated
+from backend.gql_api.permissions import IsMentor, IsStudent, IsAuthenticated
 from backend.database import get_database, Database
-from backend.graphql.context import context_manager
+from backend.gql_api.context import context_manager
 from backend.exceptions import (
     ValidationError,
     AuthorizationError,
